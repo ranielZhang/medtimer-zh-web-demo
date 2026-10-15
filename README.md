@@ -2,7 +2,7 @@
 
 这是参考 [MedTimer](https://github.com/Futsch1/medTimer) 的药品、提醒、确认与记录流程，独立实现的中文浏览器演示。原项目为 Android 应用，采用 MIT 许可证；本项目使用原生 HTML、CSS 和 JavaScript，无需安装依赖。
 
-在线体验：[GitHub Pages](https://niubition.github.io/medtimer-zh-web-demo/)。也可以下载后直接用浏览器打开 `standalone-demo.html`。
+在线体验：[GitHub Pages](https://ranielzhang.github.io/medtimer-zh-web-demo/)。也可以下载后直接用浏览器打开 `standalone-demo.html`。
 
 本地运行：在项目目录执行 `python3 -m http.server 8765`，然后访问 `http://localhost:8765`。
 
