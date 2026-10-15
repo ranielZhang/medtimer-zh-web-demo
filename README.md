@@ -1,6 +1,8 @@
-# MedTimer 中文微信小程序演示
+# MedTimer 中文版｜微信小程序与交互预览
 
-把开源 Android 应用 [MedTimer](https://github.com/Futsch1/medTimer) 的主要界面和用药事件流程移植成微信小程序原生项目（WXML、WXSS、JavaScript）。[在线手机预览](https://ranielzhang.github.io/medtimer-zh-web-demo/) 与小程序共用一份领域模型；预览可操作，但它是网页，并非微信发布的小程序。
+这是一个面向中文用户的用药管理交互演示项目，参考开源 Android 应用 [MedTimer](https://github.com/Futsch1/medTimer)，以独立实现呈现其核心界面、用药事件流程和记录分析。项目包含可导入微信开发者工具的原生小程序（WXML、WXSS、JavaScript），以及[可交互网页预览](https://ranielzhang.github.io/medtimer-zh-web-demo/)；两端共用领域模型。
+
+演示支持药品与提醒规则管理、服药/跳过/延后/补记、库存变化，以及近 7 / 30 天图表、历史表格、月历和相对浓度趋势。数据为本地虚构测试数据，网页预览不是已发布的微信小程序；项目不提供后台定时提醒，也不构成医疗建议。
 
 ## 运行小程序
 
