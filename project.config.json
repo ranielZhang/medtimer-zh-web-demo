@@ -1,0 +1,13 @@
+{
+  "miniprogramRoot": "miniprogram/",
+  "projectname": "MedTimer 中文小程序演示",
+  "description": "参考 MedTimer 的微信小程序交互原型",
+  "appid": "touristappid",
+  "compileType": "miniprogram",
+  "setting": {
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": false
+  }
+}

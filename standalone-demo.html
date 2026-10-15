@@ -2,265 +2,281 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f8f6f1">
-  <meta name="description" content="安心服药：中文服药提醒交互演示。">
-  <title>安心服药 · 中文交互 Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9fe">
+  <meta name="description" content="MedTimer 中文微信小程序界面与交互预览。">
+  <title>MedTimer · 微信小程序预览</title>
   <style>
-:root{--ink:#172d2c;--muted:#758482;--line:#e8e9e3;--paper:#f8f7f3;--white:#fff;--green:#265e51;--green-dark:#153e36;--green-soft:#e4efea;--mint:#e9f4ef;--orange:#c78345;--orange-soft:#fff1df;--blue:#5886a4;--blue-soft:#edf5fa;--shadow:0 12px 32px rgba(29,53,48,.045)}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",system-ui,sans-serif;-webkit-font-smoothing:antialiased}button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible{outline:3px solid #9bc7b5;outline-offset:3px}.hidden{display:none!important}.app-shell{min-height:100vh;display:flex}.sidebar{position:sticky;top:0;width:242px;height:100vh;flex:0 0 242px;background:#fff;border-right:1px solid var(--line);padding:34px 18px 24px;display:flex;flex-direction:column}.brand{display:flex;align-items:center;gap:11px;padding:0 13px}.brand strong{display:block;font-size:19px;letter-spacing:.02em}.brand small{display:block;color:#97a5a1;font-size:11px;margin-top:3px;letter-spacing:.05em}.brand-mark{width:39px;height:39px;border-radius:13px;display:grid;place-items:center;background:var(--green);color:#fff;font-size:25px;line-height:1}.side-label{font-size:11px;color:#a7b0ac;letter-spacing:.15em;padding:0 16px;margin:64px 0 14px}.nav-list{display:grid;gap:7px}.nav-item{display:flex;align-items:center;gap:13px;width:100%;border:0;background:transparent;color:#687774;padding:13px 15px;border-radius:11px;font-size:14px;text-align:left;font-weight:600}.nav-item:hover{background:#f3f7f4}.nav-item.active{background:#e8f2ec;color:#23584b}.nav-icon{font-size:19px;font-weight:400;width:20px;text-align:center}.side-bottom{margin-top:auto}.privacy-card{background:#f3f7f2;border:1px solid #e2ebe2;border-radius:13px;padding:17px 16px}.privacy-icon{display:block;color:#5f9b74;font-size:22px;margin-bottom:9px}.privacy-card strong{font-size:13px}.privacy-card p{font-size:11px;line-height:1.8;color:#7c8d83;margin:6px 0 0}.reset-link{border:0;background:none;color:#a2aaa6;font-size:12px;padding:19px 16px 0;text-align:left}.reset-link:hover{color:var(--green)}.source-link{display:block;padding:10px 16px 0;color:#a2aaa6;font-size:11px;text-decoration:none}.source-link:hover{color:var(--green);text-decoration:underline}.main-content{max-width:1240px;width:100%;margin:0 auto;padding:0 56px 70px;min-width:0}.topbar{height:86px;display:flex;align-items:center;justify-content:flex-end;border-bottom:1px solid #e8e9e5}.topbar-right{display:flex;align-items:center;gap:18px}.demo-pill{display:flex;align-items:center;gap:8px;border:1px solid #dbe7df;color:#5a7968;background:#eff6ef;padding:7px 12px;border-radius:99px;font-size:11px;font-weight:600}.pulse-dot{width:6px;height:6px;border-radius:50%;background:#64a17b;box-shadow:0 0 0 3px #d5eadb}.avatar{height:34px;width:34px;border-radius:50%;display:grid;place-items:center;background:#d7e5dc;color:#3d7054;font-size:13px;font-weight:700}.mobile-brand{display:none}.page-view{padding-top:45px}.page-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:31px}.eyebrow{font-size:12px;color:#7d9b8c;font-weight:650;margin:0 0 11px;letter-spacing:.08em}.page-heading h1{font-size:33px;letter-spacing:-.055em;margin:0;font-weight:750}.lead{color:#88938f;font-size:13px;margin:11px 0 0;line-height:1.6}.button{border-radius:10px;padding:11px 18px;min-height:42px;border:1px solid #dce2dc;font-size:13px;font-weight:650;white-space:nowrap;transition:transform .16s,background .16s,box-shadow .16s}.button:hover{transform:translateY(-1px);box-shadow:0 5px 16px rgba(25,55,47,.09)}.button span{font-size:18px;vertical-align:-1px;margin-right:3px;font-weight:400}.button-light{background:#fff;color:#47645a}.button-dark{background:var(--green);color:#fff;border-color:var(--green)}.hero-grid{display:grid;grid-template-columns:minmax(0,1.62fr) minmax(245px,.82fr);gap:19px}.hero-card{min-height:280px;border-radius:17px;padding:27px 30px 23px;position:relative;overflow:hidden;background:linear-gradient(125deg,#1e574a 0%,#183f38 80%);color:#fff;box-shadow:0 15px 25px rgba(28,65,53,.11)}.hero-card:after{content:"✳";font-size:270px;line-height:1;position:absolute;color:#ffffff0c;right:-24px;top:-28px;pointer-events:none}.hero-top,.progress-top{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1}.hero-label{display:flex;gap:7px;align-items:center;color:#c6e3d3;font-size:12px;font-weight:650}.mini-sparkle{font-size:15px}.hero-badge{border:1px solid #89ae9b69;background:#ffffff12;border-radius:99px;padding:6px 10px;color:#e7f2e9;font-size:10px}.hero-time{font-size:45px;letter-spacing:-.055em;font-weight:700;margin:24px 0 4px;line-height:1}.hero-drug{font-size:18px;font-weight:700;margin:0 0 7px}.hero-meta{color:#d0e4db;font-size:12px}.hero-actions{display:flex;gap:9px;margin-top:22px;position:relative;z-index:1}.hero-actions button{border:0;background:#fff;color:#245144;border-radius:8px;padding:10px 13px;font-size:12px;font-weight:700}.hero-actions button.secondary{background:#ffffff18;color:#f6fff9;border:1px solid #ffffff43}.hero-actions button:hover{filter:brightness(.95)}.hero-foot{position:relative;z-index:1;border-top:1px solid #ffffff23;margin-top:22px;padding-top:14px;color:#b4d3c4;font-size:10px;line-height:1.5}.hero-foot span{font-size:15px;vertical-align:-1px;margin-right:5px}.hero-empty{margin:30px 0 32px;font-size:24px;font-weight:650}.progress-card{background:#fff;border:1px solid #eceee9;border-radius:17px;padding:26px 26px 22px;min-height:280px;box-shadow:var(--shadow)}.section-kicker{font-size:10px;color:#93a69c;letter-spacing:.18em;font-weight:700}.progress-icon{font-size:25px;color:#a5cbb5}.progress-number{margin:38px 0 3px;display:flex;align-items:baseline;gap:4px}.progress-number strong{font-size:51px;line-height:1;font-weight:650;letter-spacing:-.07em}.progress-number span{font-size:18px;color:#a1aaa5}.progress-card p{font-size:12px;color:#98a5a0;margin:0}.progress-track{height:7px;background:#eef0e9;border-radius:99px;overflow:hidden;margin:28px 0 16px}.progress-track span{height:100%;width:0;background:#75ae89;display:block;border-radius:99px;transition:width .4s}.progress-caption{font-size:11px;color:#8c9c91}.section-heading{margin:46px 0 17px;display:flex;align-items:end;justify-content:space-between}.section-heading h2{font-size:20px;letter-spacing:-.035em;margin:5px 0 0}.text-button{background:none;border:0;color:#51806a;font-size:12px;font-weight:650}.text-button:hover{text-decoration:underline}.schedule-list{background:#fff;border:1px solid var(--line);border-radius:15px;overflow:hidden;box-shadow:var(--shadow)}.schedule-item{display:grid;grid-template-columns:77px 1fr auto;align-items:center;gap:17px;min-height:96px;padding:17px 24px;border-bottom:1px solid #eef0eb}.schedule-item:last-child{border-bottom:0}.schedule-time{font-size:18px;font-weight:700;letter-spacing:-.04em}.schedule-center{display:flex;align-items:center;gap:14px;min-width:0}.drug-icon{height:45px;width:45px;flex:none;border-radius:12px;display:grid;place-items:center;font-size:22px}.drug-icon.green{background:#e6f1e8;color:#5c9371}.drug-icon.orange{background:#fff0e1;color:#c99250}.drug-icon.blue{background:#eaf2f8;color:#6f9fbd}.drug-icon.purple{background:#f0edf8;color:#8d83b6}.schedule-name{font-weight:650;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.schedule-detail{font-size:11px;color:#9aa5a0;margin-top:5px}.status{display:inline-flex;align-items:center;gap:5px;font-size:11px;border-radius:99px;padding:6px 10px;white-space:nowrap}.status.pending{color:#a88348;background:#fff5e5}.status.taken{color:#4e8c6b;background:#ebf6ee}.status.skipped{color:#9aa3a0;background:#f2f3f1}.status.snoozed{color:#617d9d;background:#edf3fa}.schedule-actions{display:flex;align-items:center;gap:7px}.schedule-actions button{background:#f6faf6;border:1px solid #e4ebe4;color:#3e745b;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:650}.schedule-actions button:hover{background:#eaf3e9}.schedule-actions button.subtle{color:#9a9f9b;background:#fff}.bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:23px}.info-card{background:#fff;border:1px solid var(--line);border-radius:13px;padding:21px 20px;display:flex;align-items:flex-start;gap:14px}.info-symbol{height:34px;width:34px;flex:none;border-radius:10px;background:var(--orange-soft);color:#c89155;display:grid;place-items:center;font-size:20px}.info-symbol.blue{background:var(--blue-soft);color:var(--blue)}.info-card strong{font-size:13px}.info-card p{font-size:11px;line-height:1.7;color:#9aa5a0;margin:6px 0 0}.medicines-heading{margin-top:42px}.count-tag{font-size:12px;background:#e8efea;padding:3px 9px;border-radius:99px;color:#61816b;vertical-align:3px;margin-left:4px}.medicine-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px}.medicine-card{background:#fff;border:1px solid var(--line);border-radius:15px;padding:22px;box-shadow:var(--shadow)}.medicine-card-top{display:flex;gap:13px;align-items:center}.medicine-card-name{font-size:15px;font-weight:700}.medicine-card-note{font-size:11px;color:#9ba7a0;margin-top:4px}.medicine-card-body{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:25px 0 18px}.medicine-card-body small{display:block;color:#a0aaa4;font-size:10px;margin-bottom:6px}.medicine-card-body strong{font-size:15px;font-weight:650}.medicine-card-foot{border-top:1px solid #eff0ec;padding-top:15px;display:flex;align-items:center;justify-content:space-between}.medicine-card-foot span{color:#789383;font-size:11px}.medicine-card-foot button{border:0;background:none;color:#a0aaa3;font-size:11px}.medicine-card-foot button:hover{color:#b26357}.stock-low{color:#ca8d49!important}.history-card{background:#fff;border:1px solid var(--line);border-radius:15px;overflow:hidden;box-shadow:var(--shadow)}.history-card-head{display:flex;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--line);font-size:12px;font-weight:650;color:#71867a}.history-card-head span:last-child{color:#a7b2a9}.history-item{display:grid;grid-template-columns:37px 1fr auto;gap:13px;align-items:center;padding:18px 24px;border-bottom:1px solid #f1f2ee}.history-item:last-child{border-bottom:0}.history-dot{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--green-soft);color:var(--green)}.history-dot.skipped{background:#f3f3f1;color:#8d9c92}.history-dot.snoozed{background:var(--blue-soft);color:var(--blue)}.history-item strong{display:block;font-size:13px}.history-item small{display:block;color:#a5afa7;font-size:11px;margin-top:5px}.empty-state{text-align:center;padding:50px 24px;color:#99a59d;font-size:13px}.empty-state span{display:block;font-size:29px;color:#9abb9d;margin-bottom:10px}.modal{width:min(520px,calc(100% - 30px));border:1px solid #e3e8e1;border-radius:18px;box-shadow:0 22px 80px rgba(17,36,31,.22);padding:28px;background:#fff;color:var(--ink)}.modal::backdrop{background:#112d28a9;backdrop-filter:blur(2px)}.modal-head{display:flex;align-items:flex-start;justify-content:space-between}.modal h2{font-size:22px;margin:5px 0 0}.icon-button{height:31px;width:31px;border:0;background:#f1f4ef;color:#84958a;border-radius:9px;font-size:22px;line-height:1}.modal-intro{color:#8f9f94;font-size:12px;line-height:1.7;margin:15px 0 25px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:17px}.field{display:block;color:#65766d;font-size:11px;font-weight:650}.field.wide{grid-column:1/-1}.field input{display:block;width:100%;border:1px solid #dfe6df;border-radius:9px;background:#fbfcfa;color:var(--ink);margin-top:8px;padding:11px 12px;min-height:41px;font-size:13px}.field input::placeholder{color:#b0bcb3}.modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:24px}.form-error{color:#b15e53;font-size:11px;min-height:15px;margin:7px 0 0}.small-modal{width:min(420px,calc(100% - 30px))}.toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,20px);opacity:0;background:#173f35;color:#fff;border-radius:9px;padding:11px 17px;font-size:12px;z-index:50;pointer-events:none;transition:opacity .22s,transform .22s;box-shadow:0 10px 25px #173f3529}.toast.show{opacity:1;transform:translate(-50%,0)}.mobile-nav{display:none}
-@media(max-width:1120px){.main-content{padding:0 32px 60px}.sidebar{width:205px;flex-basis:205px}.hero-grid{grid-template-columns:1.4fr .85fr}.schedule-item{grid-template-columns:62px 1fr auto;gap:10px;padding:16px}.schedule-actions{flex-wrap:wrap;justify-content:flex-end}}
-@media(max-width:800px){.sidebar{display:none}.main-content{padding:0 22px 95px}.topbar{height:70px;justify-content:space-between}.mobile-brand{display:flex;gap:9px;align-items:center;font-size:17px}.mobile-brand .brand-mark{height:31px;width:31px;font-size:20px;border-radius:10px}.page-view{padding-top:30px}.mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);z-index:20;padding:8px 12px max(8px,env(safe-area-inset-bottom));justify-content:space-around}.mobile-nav button{border:0;background:none;color:#9aaa9e;font-size:10px;display:flex;align-items:center;flex-direction:column;gap:2px;padding:4px 18px}.mobile-nav button span{font-size:20px}.mobile-nav button.active{color:var(--green);font-weight:750}.hero-grid{grid-template-columns:1fr 240px}.page-heading h1{font-size:29px}}
-@media(max-width:630px){.main-content{padding:0 16px 90px}.page-heading{align-items:flex-start;gap:10px}.page-heading h1{font-size:25px}.lead{font-size:12px}.page-heading .button{padding:9px 11px;min-height:37px;font-size:11px}.hero-grid{grid-template-columns:1fr;gap:12px}.hero-card{min-height:270px;padding:24px}.progress-card{min-height:0;padding:21px}.progress-number{margin:16px 0 3px}.progress-number strong{font-size:37px}.progress-track{margin:18px 0 9px}.section-heading{margin-top:32px}.schedule-item{grid-template-columns:58px 1fr;gap:10px;min-height:110px}.schedule-center{gap:9px}.drug-icon{height:38px;width:38px;font-size:18px}.schedule-name{font-size:13px}.schedule-actions{grid-column:2;justify-content:flex-start}.schedule-actions button{padding:7px 9px}.bottom-grid,.medicine-grid{grid-template-columns:1fr;gap:12px}.topbar-right{gap:9px}.topbar{border-bottom:0}.demo-pill{font-size:10px}.modal{padding:23px}.toast{bottom:76px;white-space:nowrap;max-width:calc(100vw - 24px)}}
-
-.day-toolbar{display:flex;align-items:center;gap:9px;margin:8px 0 16px}.day-toolbar strong{font-size:14px;min-width:110px;text-align:center}.day-toolbar button,.event-filters button{border:1px solid #dfe8df;background:#fff;color:#527363;border-radius:8px;padding:8px 11px;font-size:12px}.day-toolbar button:hover,.event-filters button:hover{background:#eaf3e9}.day-toolbar button:disabled{opacity:.4;cursor:not-allowed}.event-filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:13px}.event-filters button.active{background:#265e51;color:#fff;border-color:#265e51}.flow-note{font-size:11px;line-height:1.7;color:#788a7d;margin-top:12px}.hero-status{font-size:11px;font-weight:500;color:#d0e4db;margin-left:8px}.status.scheduled{color:#a88348;background:#fff5e5}.status.raised{color:#9b5f39;background:#fff0e7}.rule-list{border-top:1px solid #eff0ec;padding-top:8px;margin-top:8px}.rule-row{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:8px 0;font-size:11px;color:#637568}.rule-row strong{color:#284c3d}.rule-row span:last-child{display:flex;gap:5px;flex-shrink:0}.rule-row button,.medicine-card-foot button{border:0;background:#eef5ef;color:#3e745b;padding:6px 8px;border-radius:7px;font-size:11px}.rule-row button:hover,.medicine-card-foot button:hover{background:#dbeade;color:#265e51}.medicine-card-foot{gap:7px;flex-wrap:wrap;justify-content:flex-start}.weekday-field{grid-column:1/-1;border:0;padding:0;margin:0}.weekday-field legend{font-size:11px;color:#65766d;font-weight:650;margin-bottom:10px}.weekdays{display:flex;flex-wrap:wrap;gap:8px}.weekdays label{font-size:12px;display:flex;align-items:center;gap:3px;background:#f2f6f1;border-radius:7px;padding:7px}.notification-actions{display:flex;flex-wrap:wrap;gap:8px}.notification-actions .button{flex:1;min-width:115px}
-.history-review{display:inline-block;margin-top:7px;padding:0;border:0;background:none;color:#3e745b;font-size:11px;font-weight:650}.history-review:hover{text-decoration:underline}
-@media(max-width:630px){.day-toolbar{flex-wrap:wrap}.day-toolbar strong{min-width:90px}.rule-row{align-items:flex-start;flex-direction:column}.schedule-actions{flex-wrap:wrap}.notification-actions .button{flex-basis:100%}}
+:root{--bg:#faf9fe;--card:#eeedf5;--blue:#536797;--pale:#dce3fb;--ink:#31333d;--muted:#666a78;--line:#c9cbd6;--green:#91e791}*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink)}body{min-height:100vh;background:radial-gradient(circle at 20% 15%,#e1e8ff,#eae9f3 43%,#d9dce9);display:flex;justify-content:center;align-items:center;gap:64px;padding:24px}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #879bd1;outline-offset:2px}.preview-context{width:330px;display:flex;flex-direction:column;gap:15px}.preview-context span{font-size:11px;font-weight:800;letter-spacing:.2em;color:#586ca2}.preview-context strong{font-size:38px;line-height:1.15}.preview-context p{font-size:14px;line-height:1.7;color:#657086}.preview-context a{color:#40568e;font-size:14px;font-weight:700;text-decoration:none}.phone{width:390px;height:min(844px,calc(100vh - 32px));min-height:600px;border:9px solid #252936;border-radius:42px;background:var(--bg);box-shadow:0 35px 80px #3f486b55;overflow:hidden;display:flex;flex-direction:column;position:relative}.status-bar{height:40px;flex:none;padding:10px 28px 4px;font-size:13px;font-weight:700;display:flex;justify-content:space-between}.status-signals{letter-spacing:1px}.home-indicator{height:21px;flex:none;display:flex;align-items:center;justify-content:center}.home-indicator:after{content:"";width:112px;height:4px;border-radius:9px;background:#30343b}.app{flex:1;min-height:0;display:flex;flex-direction:column}.topbar{height:70px;flex:none;display:flex;align-items:center;padding:0 19px;gap:8px}.topbar h1{flex:1;font-size:24px;font-weight:500;line-height:1.15;margin:0}.topbar .back,.topbar .more{border:0;background:none;color:#4c5060;font-size:30px;padding:3px 8px}.topbar .back{font-size:38px}.topbar .capsule{font-size:13px;border:1px solid #bdc0cd;border-radius:18px;padding:5px 10px;color:#5c6070}.scroll{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;padding:13px 17px 105px}.scroll::-webkit-scrollbar{width:4px}.scroll::-webkit-scrollbar-thumb{background:#d6d8e0}.week-strip{display:flex;align-items:center;gap:2px;margin:0 -6px 14px}.week-strip>button{border:0;background:none;color:#50556a;font-size:28px;width:25px;padding:0}.week-days{flex:1;display:flex;justify-content:space-between}.week-day{border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#535866;border-radius:50%;height:54px;width:44px;padding:0}.week-day small{font-size:11px}.week-day strong{font-size:17px}.week-day.selected{background:var(--blue);color:white}.filter-row{display:flex;gap:5px;overflow:auto;scrollbar-width:none;margin-bottom:13px}.filter-row::-webkit-scrollbar{display:none}.filter-row button{white-space:nowrap;border:1px solid #c7c9d5;background:transparent;color:#555b6e;border-radius:20px;padding:5px 9px;font-size:11px}.filter-row button.active{background:var(--pale);border-color:var(--pale);color:#425784}.selection-actions{width:220px;height:48px;border:1.5px solid #b9bdcc;border-radius:30px;margin:8px auto 15px;display:flex;justify-content:space-around;align-items:center;color:#566383;font-size:24px}.timeline{display:flex;flex-direction:column}.event-row{display:flex;gap:9px;min-height:82px}.rail{width:40px;flex:none;display:flex;align-items:center;flex-direction:column}.status-circle{width:39px;height:39px;border:0;border-radius:50%;background:#b4c6f8;color:#36466e;font-size:24px;display:flex;align-items:center;justify-content:center;flex:none}.status-circle.taken{background:#9bea9a;color:#315f4a}.status-circle.scheduled{background:#e1e6fb;color:#596a91}.status-circle.snoozed{background:#e2dafa;color:#66558c}.rail-line{width:4px;background:#5b6e9c;border-radius:5px;flex:1;margin:5px 0}.event-row:last-child .rail-line{background:transparent}.event-card{display:flex;align-items:center;background:var(--card);border:0;border-radius:18px;min-width:0;flex:1;margin-bottom:15px;padding:11px;text-align:left;color:var(--ink)}.event-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}.event-time{font-size:12px;color:#555a69}.event-name{font-size:16px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.event-dose{font-size:12px;color:#656978}.swatch{height:43px;width:43px;flex:none;margin-left:8px;background:var(--blue);color:white;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:25px}.hint{font-size:11px;color:#888d9b;line-height:1.5;margin:7px 4px 30px}.empty{text-align:center;padding:54px 10px;color:#858b9a;font-size:13px}.tabbar{height:69px;flex:none;background:#eeedf6;display:flex;justify-content:space-around}.tabbar button{border:0;background:none;width:33%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#666a79;font-size:11px}.tabbar button b{font-size:24px;line-height:1;font-weight:400;border-radius:20px;padding:1px 18px}.tabbar button.current{color:#4a5f91;font-weight:700}.tabbar button.current b{background:#dce3ff}.fab{position:absolute;bottom:99px;right:17px;border:0;border-radius:21px;background:#b4c8fb;color:#314875;padding:13px 17px;font-size:14px;font-weight:700;box-shadow:0 9px 23px #65749b44}.medicine-card{width:100%;border:0;background:var(--card);border-radius:19px;margin:0 0 14px;padding:18px 15px;text-align:left;color:var(--ink);box-shadow:0 3px 10px #55557715}.medicine-top{display:flex;align-items:center}.medicine-top .swatch{margin:0 12px 0 0}.medicine-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}.medicine-text strong{font-size:16px;line-height:1.25}.medicine-text small{font-size:11px;color:#686d7c}.drag{font-size:21px;color:#787f90}.tags{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 0 55px}.tags span{background:#dce3fb;color:#53618d;padding:5px 9px;border-radius:14px;font-size:10px}.analysis-switch{display:flex;gap:5px;align-items:center;margin-bottom:14px}.analysis-switch button{width:42px;height:36px;border:1.5px solid #b9bdcc;background:transparent;border-radius:10px;color:#5b6175;font-size:22px}.analysis-switch button.active{background:#dce3fc;border-color:#dce3fc}.analysis-switch select{margin-left:auto;background:#dce3fc;color:#4c5e8b;border:0;padding:9px;border-radius:10px;font-size:13px}.chart-card,.table-card,.calendar-card{background:var(--card);border-radius:20px;padding:20px 13px;margin-bottom:12px}.chart-bars{height:280px;border-bottom:1px solid #b0b4c2;display:flex;justify-content:space-around;align-items:flex-end}.bar-col{flex:1;height:100%;display:flex;align-items:center;justify-content:flex-end;flex-direction:column;gap:6px;color:#6b6f7c;font-size:10px}.bar-stack{width:18px;height:90%;display:flex;flex-direction:column;justify-content:flex-end}.bar-taken{background:#526697}.bar-skipped{background:#aec0f3}.legend{display:flex;gap:16px;color:#526697;font-size:11px;margin-top:14px}.legend span:last-child{color:#9fb0e2}.summaries{display:flex;gap:10px}.summary{background:var(--card);border-radius:18px;flex:1;padding:16px 9px;display:flex;flex-direction:column;align-items:center;gap:10px;font-size:11px;color:#6b6f7c}.summary b{font-size:31px;color:#536797}.table-row{display:grid;grid-template-columns:87px 1fr 50px;gap:6px;border-bottom:1px solid #bec1cd;padding:11px 4px;font-size:12px}.table-row.head{font-weight:700}.calendar-head{display:flex;justify-content:space-between;align-items:center;padding:1px 9px 15px;font-size:16px;font-weight:700}.calendar-head button{border:0;background:none;font-size:27px;color:#59627e}.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.calendar-cell{border:0;aspect-ratio:1;border-radius:50%;background:#e0e5fb;display:flex;align-items:center;justify-content:center;color:#40465b;font-size:12px}.calendar-cell.day-label{background:none;font-size:11px}.calendar-cell.outside{opacity:.4}.calendar-cell.selected{background:#536797;color:white}.calendar-cell.has-event{font-weight:800}.calendar-list{margin-top:16px;border-top:1px solid var(--line);padding-top:9px;font-size:11px;line-height:1.8}.editor-card{background:#f0eff8;border-radius:18px;padding:17px;margin:0 0 15px}.editor-head{display:flex;align-items:center}.editor-head .swatch{border-radius:50%;margin:0 12px 0 0}.editor-tools{display:flex;justify-content:space-between;font-size:23px;color:#556a99;margin-top:14px}.field{display:flex;flex-direction:column;gap:6px;margin-bottom:13px;font-size:11px;color:#636979}.field input,.field select{width:100%;border:1.5px solid #b5b8c6;background:#fbfaff;border-radius:10px;min-height:38px;padding:7px 10px;color:#333640;font-size:15px}.field-row{display:flex;gap:10px}.field-row .field{flex:1;min-width:0}.subhead{font-size:17px;font-weight:700;margin:18px 4px 12px}.reminder-card{width:100%;border:1px solid #bfc2cf;background:#eeedf5;text-align:left;color:var(--ink);border-radius:17px;padding:15px;margin-bottom:11px}.reminder-card strong{font-size:17px}.reminder-card small{font-size:12px;color:#737887;display:block;margin:6px 0 10px}.advanced-pill{background:#566b9d;color:white;text-align:center;border-radius:22px;padding:7px;font-size:12px}.editor-actions{display:flex;gap:8px;margin:14px 0 40px}.editor-actions button,.add-rule{border:0;background:#566b9d;color:white;border-radius:20px;padding:11px 15px;flex:1;font-size:13px}.editor-actions button.danger{background:#f8e5e9;color:#a23b50}.add-rule{display:block;margin:13px 0}.weekday-choices{display:flex;gap:5px;flex-wrap:wrap;margin:10px 0 18px}.weekday-choices button{height:34px;width:34px;border-radius:50%;border:0;background:#e4e6ef;color:#606677;font-size:12px}.weekday-choices button.selected{background:#566b9d;color:white}.check-row{display:flex;gap:9px;align-items:center;font-size:13px;margin:13px 0}.notice{font-size:11px;color:#858b9b;line-height:1.6;margin:11px 0}.overlay{position:absolute;inset:0;background:#18213c70;z-index:10;display:flex;align-items:flex-end}.sheet{background:#fbfaff;border-radius:20px 20px 0 0;width:100%;padding:22px 18px 28px}.sheet h2{font-size:17px;margin:0 0 15px}.sheet button{display:block;width:100%;border:0;border-bottom:1px solid #d7d9e1;background:none;text-align:left;padding:13px 9px;color:#384054;font-size:14px}.sheet button:last-child{border-bottom:0;color:#7d8391}.menu-pop{position:absolute;z-index:8;right:15px;top:106px;background:#fff;border:1px solid #d1d4df;border-radius:12px;box-shadow:0 12px 25px #55557733;min-width:170px}.menu-pop button{display:block;width:100%;border:0;background:none;text-align:left;padding:12px;font-size:12px;color:#40495f}.menu-pop button+button{border-top:1px solid #edf0f5}@media(max-width:800px){body{display:block;padding:0;background:var(--bg)}.preview-context{display:none}.phone{width:100vw;height:100dvh;min-height:0;border:0;border-radius:0;box-shadow:none}.status-bar{height:36px}}
 
 </style>
 </head>
 <body>
-  <div class="app-shell">
-    <aside class="sidebar" aria-label="主导航">
-      <div class="brand"><span class="brand-mark" aria-hidden="true">✳</span><span><strong>安心服药</strong><small>用药计划 · 演示版</small></span></div>
-      <div class="side-label">工作台</div>
-      <nav class="nav-list" aria-label="页面">
-        <button class="nav-item active" data-view="today" type="button"><span class="nav-icon">▦</span> 今日计划</button>
-        <button class="nav-item" data-view="medicines" type="button"><span class="nav-icon">▤</span> 我的药品</button>
-        <button class="nav-item" data-view="history" type="button"><span class="nav-icon">◷</span> 服药记录</button>
-      </nav>
-      <div class="side-bottom">
-        <div class="privacy-card"><span class="privacy-icon">♧</span><strong>仅在本机保存</strong><p>演示数据保存在当前浏览器。关闭网页后再次打开，记录仍会保留。</p></div>
-        <button class="reset-link" id="reset-demo" type="button">↺ 重置演示数据</button><a class="source-link" href="https://github.com/Futsch1/medTimer" target="_blank" rel="noopener noreferrer">参考项目：MedTimer ↗</a>
-      </div>
-    </aside>
+  <div class="preview-context"><span>WECHAT MINI PROGRAM PREVIEW</span><strong>MedTimer 中文小程序</strong><p>右侧为可操作的手机预览；仓库内提供原生 WXML / WXSS 小程序源码。</p><a href="https://github.com/ranielZhang/medtimer-zh-web-demo">查看 GitHub 源码 ↗</a></div>
+  <div class="phone" id="phone"><div class="status-bar"><span id="clock">09:41</span><span class="status-signals">●●●　▰</span></div><div id="app" class="app"></div><div class="home-indicator"></div></div>
+  <script>
+const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
+const STATUSES = ['scheduled', 'raised', 'snoozed', 'taken', 'skipped'];
+function id(prefix) { return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function dayKey(date) { return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-'); }
+function dateOf(day) { return new Date(+day.slice(0, 4), +day.slice(5, 7) - 1, +day.slice(8, 10)); }
+function plusDays(day, offset) { const date = dateOf(day); date.setDate(date.getDate() + offset); return dayKey(date); }
+function at(day, time) { return dateOf(day).getTime() + (+time.slice(0, 2) * 60 + +time.slice(3, 5)) * 60000; }
+function valid(state) { return !!(state && state.version === 1 && Array.isArray(state.medicines) && state.events && Array.isArray(state.audit)); }
+function seed() {
+  return { version: 1, medicines: [
+    { id: 'm1', name: '维生素 B12（500μg）', color: '#a23b50', icon: '▣', stock: 50.5, unit: '片', threshold: 12, notes: '', tags: ['维生素', '日常'], reminders: [
+      { id: 'r1', type: 'weekly', time: '07:00', amount: 2, days: ALL_DAYS.slice(), active: true }
+    ] },
+    { id: 'm2', name: 'Omega 3（EPA/DHA 500mg）', color: '#596b98', icon: '⬡', stock: 10, unit: '粒', threshold: 12, notes: '餐后', tags: ['营养补充'], reminders: [
+      { id: 'r2', type: 'weekly', time: '08:00', amount: 1, days: ALL_DAYS.slice(), active: true },
+      { id: 'r3', type: 'weekly', time: '09:00', amount: 1, days: ALL_DAYS.slice(), active: true }
+    ] },
+    { id: 'm3', name: '示例药品 C', color: '#7aab87', icon: '✣', stock: 18, unit: '片', threshold: 5, notes: '按已有方案', tags: [], reminders: [
+      { id: 'r4', type: 'weekly', time: '16:00', amount: 1, days: [1, 2, 3, 4, 5], active: true }
+    ] }
+  ], events: {}, audit: [] };
+}
+function activeOn(reminder, day) {
+  if (!reminder.active) return false;
+  if (reminder.type === 'cycle') {
+    if (!reminder.cycleStart || !reminder.activeDays || !reminder.pauseDays) return false;
+    const elapsed = Math.round((dateOf(day) - dateOf(reminder.cycleStart)) / 86400000);
+    const period = Number(reminder.activeDays) + Number(reminder.pauseDays);
+    return elapsed >= 0 && period > 0 && elapsed % period < reminder.activeDays;
+  }
+  return (reminder.days || ALL_DAYS).includes(dateOf(day).getDay());
+}
+function scheduled(state, day) {
+  const rows = [];
+  state.medicines.forEach(medicine => medicine.reminders.forEach(reminder => {
+    const key = day + ':' + reminder.id;
+    const event = state.events[key];
+    if (!activeOn(reminder, day) && !event) return;
+    rows.push({ key, day, medicine, reminder, event, status: event ? event.status : 'scheduled',
+      dueAt: event && event.status === 'snoozed' ? event.snoozeUntil : at(day, reminder.time) });
+  }));
+  return rows.sort((a, b) => a.dueAt - b.dueAt || a.medicine.name.localeCompare(b.medicine.name));
+}
+function snapshot(row) { return { key: row.key, day: row.day, medicineId: row.medicine.id, reminderId: row.reminder.id,
+  name: row.medicine.name, amount: row.reminder.amount, unit: row.medicine.unit, time: row.reminder.time,
+  status: 'scheduled', dueAt: at(row.day, row.reminder.time), raisedAt: null, processedAt: null, snoozeUntil: null, deducted: 0, manual: false }; }
+function findRow(state, key) { return scheduled(state, key.slice(0, 10)).find(row => row.key === key); }
+function log(state, action, event, now) { state.audit.push({ at: now.getTime(), action, key: event.key, name: event.name }); }
+function raise(state, key, now = new Date()) {
+  const row = findRow(state, key); if (!row || row.status === 'taken' || row.status === 'skipped') return false;
+  const event = row.event || snapshot(row); event.status = 'raised'; event.raisedAt = now.getTime(); event.snoozeUntil = null;
+  state.events[key] = event; log(state, '提醒触发', event, now); return true;
+}
+function reconcile(state, now = new Date()) {
+  let changed = false;
+  scheduled(state, dayKey(now)).forEach(row => { if (['scheduled', 'snoozed'].includes(row.status) && row.dueAt <= now.getTime()) changed = raise(state, row.key, now) || changed; });
+  return changed;
+}
+function snooze(state, key, minutes = 10, now = new Date()) {
+  const row = findRow(state, key); if (!row || !['raised', 'snoozed'].includes(row.status)) return false;
+  const event = row.event; event.status = 'snoozed'; event.snoozeUntil = now.getTime() + minutes * 60000;
+  log(state, '延后提醒', event, now); return true;
+}
+function outcome(state, key, status, now = new Date()) {
+  if (!['taken', 'skipped'].includes(status)) return false;
+  const row = findRow(state, key); if (!row) return false;
+  const event = row.event || snapshot(row); if (event.status === status) return false;
+  const medicine = row.medicine;
+  if (event.status === 'taken') medicine.stock = +(medicine.stock + event.deducted).toFixed(2);
+  event.deducted = 0;
+  if (status === 'taken') { event.deducted = Math.min(medicine.stock, event.amount); medicine.stock = +(medicine.stock - event.deducted).toFixed(2); }
+  event.status = status; event.processedAt = now.getTime(); event.snoozeUntil = null;
+  state.events[key] = event; log(state, status === 'taken' ? '确认服用' : '跳过本次', event, now); return true;
+}
+function manualDose(state, medicineId, amount, now = new Date()) {
+  const medicine = state.medicines.find(item => item.id === medicineId);
+  if (!medicine || !Number.isFinite(amount) || amount <= 0) return null;
+  const key = dayKey(now) + ':manual-' + id('e');
+  const deducted = Math.min(medicine.stock, amount); medicine.stock = +(medicine.stock - deducted).toFixed(2);
+  const event = { key, day: dayKey(now), medicineId, reminderId: null, name: medicine.name, amount, unit: medicine.unit,
+    time: [now.getHours(), now.getMinutes()].map(value => String(value).padStart(2, '0')).join(':'), status: 'taken',
+    dueAt: now.getTime(), raisedAt: null, processedAt: now.getTime(), snoozeUntil: null, deducted, manual: true };
+  state.events[key] = event; log(state, '补记服药', event, now); return event;
+}
+function history(state) { return Object.values(state.events).filter(event => ['taken', 'skipped'].includes(event.status)).sort((a, b) => b.processedAt - a.processedAt); }
+function stats(state, endDay, count) {
+  const result = [];
+  for (let i = count - 1; i >= 0; i--) {
+    const day = plusDays(endDay, -i);
+    const items = history(state).filter(event => event.day === day);
+    result.push({ day, label: day.slice(5).replace('-', '/'), taken: items.filter(item => item.status === 'taken').length, skipped: items.filter(item => item.status === 'skipped').length });
+  }
+  return result;
+}
+function week(day) { const offset = dateOf(day).getDay(); const monday = plusDays(day, -((offset + 6) % 7)); return Array.from({ length: 7 }, (_, index) => plusDays(monday, index)); }
+const api = { ALL_DAYS, STATUSES, id, dayKey, dateOf, plusDays, at, valid, seed, activeOn, scheduled, findRow, raise, reconcile, snooze, outcome, manualDose, history, stats, week };
+if (typeof module !== 'undefined' && module.exports) module.exports = api;
+else if (typeof window !== 'undefined') window.MedTimerModel = api;
 
-    <main class="main-content" id="main-content">
-      <header class="topbar">
-        <div class="mobile-brand"><span class="brand-mark" aria-hidden="true">✳</span><strong>安心服药</strong></div>
-        <div class="topbar-right"><span class="demo-pill"><span class="pulse-dot"></span> 交互演示</span><span class="avatar" aria-label="演示用户">安</span></div>
-      </header>
-
-      <section class="page-view" id="view-today" aria-labelledby="today-title">
-        <div class="page-heading"><div><p class="eyebrow" id="today-date"></p><h1 id="today-title">今天的用药安排</h1><p class="lead">按已有的用药计划查看和记录每一次服药。</p></div><button class="button button-light" id="open-add-today" type="button"><span>＋</span> 添加药品</button></div>
-        <div class="hero-grid">
-          <div class="hero-card">
-            <div class="hero-top"><span class="hero-label"><span class="mini-sparkle">✦</span> 下一次提醒</span><span class="hero-badge">按计划进行</span></div>
-            <div id="next-dose"></div>
-            <div class="hero-foot"><span aria-hidden="true">◴</span> “已服用”只记录您的确认；本网页 Demo 不发送系统通知。</div>
-          </div>
-          <div class="progress-card"><div class="progress-top"><span class="section-kicker">今日进度</span><span class="progress-icon" aria-hidden="true">◌</span></div><div class="progress-number"><strong id="progress-done">0</strong><span id="progress-total">/ 0 次</span></div><p>已确认服用</p><div class="progress-track"><span id="progress-fill"></span></div><div class="progress-caption" id="progress-caption"></div></div>
-        </div>
-        <div class="section-heading"><div><span class="section-kicker">REMINDER EVENTS</span><h2>用药事件</h2></div><button class="text-button" id="simulate-reminder" type="button">◉ 触发下一条提醒</button></div>
-        <div class="day-toolbar"><button type="button" id="prev-day" aria-label="前一天">←</button><strong id="selected-day"></strong><button type="button" id="next-day" aria-label="后一天">→</button><button type="button" id="jump-today">回到今天</button></div>
-        <div class="event-filters" aria-label="事件筛选"><button class="active" type="button" data-filter="all">全部</button><button type="button" data-filter="scheduled">待触发</button><button type="button" data-filter="raised">待处理</button><button type="button" data-filter="taken">已服用</button><button type="button" data-filter="skipped">已跳过</button></div>
-        <div class="schedule-list" id="schedule-list"></div>
-        <div class="flow-note" id="flow-note">计划按每条提醒的时间和星期生成；到点后成为待处理事件。确认服用才会扣减库存，稍后提醒保留同一事件。</div>
-        <div class="bottom-grid"><div class="info-card"><span class="info-symbol">♡</span><div><strong>每一次确认都由您决定</strong><p>如果暂时无法确定是否已服药，可先选择“稍后提醒”。请根据真实情况更新记录。</p></div></div><div class="info-card"><span class="info-symbol blue">▣</span><div><strong>留意药品库存</strong><p id="stock-insight">为药品填写库存后，这里会提示需要补充的药品。</p></div></div></div>
-      </section>
-
-      <section class="page-view hidden" id="view-medicines" aria-labelledby="medicines-title">
-        <div class="page-heading"><div><p class="eyebrow">药品管理</p><h1 id="medicines-title">药品与提醒规则</h1><p class="lead">一种药品可设置多条提醒，每条规则有独立时间、用量和执行星期。</p></div><button class="button button-dark" id="open-add-medicines" type="button"><span>＋</span> 添加药品</button></div>
-        <div class="section-heading medicines-heading"><div><span class="section-kicker">YOUR MEDICINES</span><h2>药品清单 <span id="medicine-count" class="count-tag"></span></h2></div></div>
-        <div class="medicine-grid" id="medicine-list"></div>
-      </section>
-
-      <section class="page-view hidden" id="view-history" aria-labelledby="history-title">
-        <div class="page-heading"><div><p class="eyebrow">服药记录</p><h1 id="history-title">最近的记录</h1><p class="lead">每条记录来自一次提醒事件；可修正误点，库存会同步调整。</p></div><button class="button button-light" id="export-history" type="button">↓ 导出 JSON</button></div>
-        <div class="history-card"><div class="history-card-head"><span>记录明细</span><span id="history-count"></span></div><div id="history-list"></div></div>
-      </section>
-    </main>
-  </div>
-
-  <nav class="mobile-nav" aria-label="手机导航"><button class="active" data-view="today" type="button"><span>▦</span>今日</button><button data-view="medicines" type="button"><span>▤</span>药品</button><button data-view="history" type="button"><span>◷</span>记录</button></nav>
-
-  <dialog id="add-dialog" class="modal"><form id="add-form" novalidate><div class="modal-head"><div><span class="section-kicker">MEDICINE & FIRST REMINDER</span><h2>添加药品</h2></div><button class="icon-button" id="close-add" type="button" aria-label="关闭">×</button></div><p class="modal-intro">请按已有用药方案填写。库存单位与单次用量单位保持一致。</p><div class="form-grid"><label class="field wide">药品名称 <input id="medicine-name" name="name" placeholder="例如：示例药品 D" maxlength="40" required></label><label class="field">单次用量 <input id="medicine-dose" name="dose" type="number" min="0.1" max="9999" step="0.1" value="1" required></label><label class="field">提醒时间 <input id="medicine-time" name="time" type="time" value="08:00" required></label><label class="field">当前库存 <input id="medicine-stock" name="stock" type="number" min="0" max="9999" step="0.1" value="30" required></label><label class="field">库存单位 <input id="medicine-unit" name="unit" placeholder="例如：片" maxlength="12" value="片" required></label><label class="field wide">备注（选填） <input id="medicine-note" name="note" placeholder="例如：早餐后" maxlength="60"></label></div><p class="form-error" id="form-error" role="alert"></p><div class="modal-actions"><button class="button button-light" id="cancel-add" type="button">取消</button><button class="button button-dark" type="submit">保存药品</button></div></form></dialog>
-
-  <dialog id="reminder-dialog" class="modal"><form id="reminder-form" novalidate><div class="modal-head"><div><span class="section-kicker">REMINDER RULE</span><h2 id="reminder-dialog-title">设置提醒</h2></div><button class="icon-button" id="close-reminder" type="button" aria-label="关闭">×</button></div><p class="modal-intro" id="reminder-medicine-name"></p><div class="form-grid"><label class="field">提醒时间 <input id="reminder-time" type="time" required></label><label class="field">单次用量 <input id="reminder-dose" type="number" min="0.1" max="9999" step="0.1" required></label><fieldset class="weekday-field"><legend>执行星期</legend><div class="weekdays" id="reminder-days"><label><input type="checkbox" value="1" checked>一</label><label><input type="checkbox" value="2" checked>二</label><label><input type="checkbox" value="3" checked>三</label><label><input type="checkbox" value="4" checked>四</label><label><input type="checkbox" value="5" checked>五</label><label><input type="checkbox" value="6" checked>六</label><label><input type="checkbox" value="0" checked>日</label></div></fieldset></div><p class="form-error" id="reminder-error" role="alert"></p><div class="modal-actions"><button class="button button-light" id="cancel-reminder" type="button">取消</button><button class="button button-dark" type="submit">保存提醒</button></div></form></dialog>
-
-  <dialog id="stock-dialog" class="modal small-modal"><form id="stock-form" novalidate><div class="modal-head"><div><span class="section-kicker">STOCK</span><h2>修正库存</h2></div><button class="icon-button" id="close-stock" type="button" aria-label="关闭">×</button></div><p class="modal-intro" id="stock-medicine-name"></p><label class="field">当前实际库存 <input id="stock-value" type="number" min="0" max="9999" step="0.1" required></label><p class="form-error" id="stock-error" role="alert"></p><div class="modal-actions"><button class="button button-light" id="cancel-stock" type="button">取消</button><button class="button button-dark" type="submit">保存库存</button></div></form></dialog>
-
-  <dialog id="notification-dialog" class="modal small-modal"><div class="modal-head"><div><span class="section-kicker">REMINDER RAISED</span><h2>用药提醒已触发</h2></div><button class="icon-button" id="close-notification" type="button" aria-label="关闭">×</button></div><p class="modal-intro" id="notification-message"></p><div class="notification-actions"><button class="button button-dark" type="button" data-notification-action="taken">已服用</button><button class="button button-light" type="button" data-notification-action="snooze">10 分钟后提醒</button><button class="button button-light" type="button" data-notification-action="skip">跳过本次</button></div></dialog>
-
-  <dialog id="confirm-dialog" class="modal small-modal"><div class="modal-head"><div><span class="section-kicker">CONFIRM ACTION</span><h2 id="confirm-title">确认操作</h2></div><button class="icon-button" id="close-confirm" type="button" aria-label="关闭">×</button></div><p class="modal-intro" id="confirm-message"></p><div class="modal-actions"><button class="button button-light" id="cancel-confirm" type="button">取消</button><button class="button button-dark" id="accept-confirm" type="button">确认</button></div></dialog>
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</script>
   <script>
 (function () {
   'use strict';
-  var KEY = 'medtimer-zh-demo-v2';
-  var daysAll = [0, 1, 2, 3, 4, 5, 6];
-  var tones = ['green', 'orange', 'blue', 'purple'];
-  var state = load();
-  var selectedDay = dayKey(new Date());
-  var filter = 'all', editingMedicineId, editingReminderId, stockMedicineId, notificationKey, confirmAction, toastTimer;
-  function dayKey(date) { return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-'); }
-  function dateOf(day) { return new Date(+day.slice(0, 4), +day.slice(5, 7) - 1, +day.slice(8, 10)); }
-  function at(day, time) { return dateOf(day).getTime() + (+time.slice(0, 2) * 60 + +time.slice(3, 5)) * 60000; }
-  function id(prefix) { return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
-  function med(idValue) { return state.medicines.find(function (m) { return m.id === idValue; }); }
-  function esc(value) { return String(value).replace(/[&<>"']/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]; }); }
-  function label(status) { return { scheduled: '待触发', raised: '待处理', snoozed: '已延后', taken: '已服用', skipped: '已跳过' }[status]; }
-  function dateText(day) { return new Intl.DateTimeFormat('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' }).format(dateOf(day)); }
-  function stamp(value) { return new Intl.DateTimeFormat('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(value)); }
-  function weekText(days) { return days.length === 7 ? '每天' : '周' + [1, 2, 3, 4, 5, 6, 0].filter(function (day) { return days.includes(day); }).map(function (day) { return '一二三四五六日'[day === 0 ? 6 : day - 1]; }).join('、'); }
-  function seed() { return { version: 2, medicines: [
-    { id: 'm1', name: '示例药品 A', stock: 18, unit: '片', note: '早餐后', tone: 'green', reminders: [{ id: 'r1', time: '08:00', amount: 1, days: daysAll.slice(), active: true }, { id: 'r2', time: '20:00', amount: 1, days: daysAll.slice(), active: true }] },
-    { id: 'm2', name: '示例药品 B', stock: 8, unit: '粒', note: '午餐后', tone: 'orange', reminders: [{ id: 'r3', time: '12:30', amount: 1, days: [1, 2, 3, 4, 5], active: true }] },
-    { id: 'm3', name: '示例药品 C', stock: 24, unit: '片', note: '按已有计划服用', tone: 'blue', reminders: [{ id: 'r4', time: '21:00', amount: 1, days: daysAll.slice(), active: true }] }
-  ], events: {}, audit: [] }; }
-  function load() {
-    try {
-      var saved = JSON.parse(localStorage.getItem(KEY));
-      if (saved && saved.version === 2 && Array.isArray(saved.medicines) && saved.events) return saved;
-      var old = JSON.parse(localStorage.getItem('medtimer-zh-demo-v1'));
-      if (old && Array.isArray(old.medicines)) {
-        var migrated = { version: 2, medicines: [], events: {}, audit: [] };
-        old.medicines.forEach(function (m, index) {
-          var amount = parseFloat(String(m.dose || '').match(/\d+(?:\.\d+)?/)?.[0]) || 1;
-          var rid = 'old-' + m.id;
-          migrated.medicines.push({ id: m.id, name: m.name, stock: Number(m.stock) || 0, unit: m.unit || '片', note: m.note || '', tone: m.tone || tones[index % 4], reminders: [{ id: rid, time: m.time || '08:00', amount: amount, days: daysAll.slice(), active: true }] });
-          Object.keys(old.daily || {}).forEach(function (key) {
-            if (!key.endsWith(':' + m.id)) return;
-            var entry = old.daily[key], day = key.slice(0, 10);
-            if (entry.status === 'pending') return;
-            migrated.events[day + ':' + rid] = { day: day, medicineId: m.id, reminderId: rid, name: m.name, unit: m.unit || '片', amount: amount, time: m.time || '08:00', status: entry.status, deducted: Number(entry.deducted) || 0, snoozeUntil: entry.until ? at(day, entry.until) : null, processedAt: Date.now() };
-          });
-        });
-        return migrated;
-      }
-    } catch (error) { /* Invalid local data falls back to synthetic examples. */ }
-    return seed();
+  const M = window.MedTimerModel;
+  const STORE = 'medtimer-wechat-preview-v1';
+  const STATUS = { scheduled: ['待触发', '▣'], raised: ['待处理', '♧'], snoozed: ['已延后', '◷'], taken: ['已服用', '✓'], skipped: ['已跳过', '×'] };
+  const WEEK = ['日', '一', '二', '三', '四', '五', '六'];
+  const app = document.getElementById('app');
+  let state;
+  try { state = JSON.parse(localStorage.getItem(STORE)); } catch (_) { state = null; }
+  if (!M.valid(state)) state = M.seed();
+  const ui = { tab: 'overview', screen: 'main', day: M.dayKey(new Date()), filter: 'all', analysis: 'chart', range: 7, editingId: '', reminderId: '', form: null, rule: null, manualId: '', manualAmount: 1, sheetKey: '', menu: false };
+  function esc(value) { return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char])); }
+  function clone(value) { return JSON.parse(JSON.stringify(value)); }
+  function save() { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (_) { alert('当前浏览器无法保存本地数据。'); } }
+  function title(day) { const date = M.dateOf(day); return (date.getMonth() + 1) + '月 ' + date.getFullYear(); }
+  function timeText(value) { const date = new Date(value); return (date.getMonth() + 1) + '/' + date.getDate() + ' ' + String(date.getHours()).padStart(2, '0') + ':' + String(date.getMinutes()).padStart(2, '0'); }
+  function med(id) { return state.medicines.find(item => item.id === id); }
+  function reminderText(rule) { return rule.type === 'cycle' ? rule.activeDays + ' 天服用 / ' + rule.pauseDays + ' 天暂停' : (rule.days.length === 7 ? '每天' : '每周 ' + rule.days.map(day => WEEK[day]).join('、')) + (rule.active ? '' : ' · 已停用'); }
+  function renderTop() {
+    const heading = ui.screen === 'editor' ? (ui.editingId ? ui.form.name : '添加药品') : ui.screen === 'reminder' ? (ui.reminderId ? '编辑提醒' : '添加提醒') : ui.screen === 'manual' ? '补记服药' : ui.tab === 'overview' ? '主页 · ' + title(ui.day) : ui.tab === 'medicines' ? '药品' : '分析';
+    return '<header class="topbar">' + (ui.screen !== 'main' ? '<button class="back" data-action="back" aria-label="返回">‹</button>' : '') + '<h1>' + esc(heading) + '</h1><button class="capsule" aria-label="微信小程序菜单">···　◯</button><button class="more" data-action="menu" aria-label="更多">⋮</button></header>';
   }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (error) { toast('浏览器未能保存数据。'); } }
-  function rows(day) {
-    var result = [];
-    state.medicines.forEach(function (m) { m.reminders.forEach(function (r) {
-      var key = day + ':' + r.id, event = state.events[key];
-      if ((!r.active || !r.days.includes(dateOf(day).getDay())) && !event) return;
-      result.push({ key: key, day: day, med: m, rule: r, event: event, status: event ? event.status : 'scheduled', due: event && event.status === 'snoozed' ? event.snoozeUntil : at(day, r.time) });
-    }); });
-    return result.sort(function (a, b) { return a.due - b.due || a.med.name.localeCompare(b.med.name); });
+  function displayRows(day) {
+    const rows = M.scheduled(state, day).map(row => ({ key: row.key, medId: row.medicine.id, name: row.medicine.name, color: row.medicine.color, icon: row.medicine.icon, amount: row.reminder.amount, unit: row.medicine.unit, time: row.reminder.time, status: row.status, due: row.dueAt }));
+    Object.values(state.events).filter(event => event.manual && event.day === day).forEach(event => { const medicine = med(event.medicineId); rows.push({ key: event.key, medId: event.medicineId, name: event.name, color: medicine?.color || '#8891aa', icon: medicine?.icon || '▣', amount: event.amount, unit: event.unit, time: event.time, status: event.status, manual: true }); });
+    return rows.sort((a, b) => a.time.localeCompare(b.time));
   }
-  function rowFor(key) { return rows(key.slice(0, 10)).find(function (row) { return row.key === key; }); }
-  function snapshot(row) { return { day: row.day, medicineId: row.med.id, reminderId: row.rule.id, name: row.med.name, amount: row.rule.amount, unit: row.med.unit, time: row.rule.time, status: 'scheduled', scheduledAt: at(row.day, row.rule.time), raisedAt: null, processedAt: null, snoozeUntil: null, deducted: 0 }; }
-  function audit(action, event) { state.audit.push({ at: Date.now(), action: action, name: event.name, key: event.day + ':' + event.reminderId }); }
-  function raise(row) {
-    var event = row.event || snapshot(row);
-    if (event.status === 'taken' || event.status === 'skipped') return false;
-    event.status = 'raised'; event.raisedAt = Date.now(); event.snoozeUntil = null;
-    state.events[row.key] = event; audit('提醒触发', event); save(); return true;
-  }
-  function reconcile() {
-    var changed = false, now = Date.now();
-    rows(dayKey(new Date())).forEach(function (row) { if ((row.status === 'scheduled' || row.status === 'snoozed') && row.due <= now) changed = raise(row) || changed; });
-    if (changed) render();
-  }
-  function outcome(row, status) {
-    var event = row.event || snapshot(row), m = row.med;
-    if (event.status === status) return;
-    if (event.status === 'taken') m.stock = +(m.stock + event.deducted).toFixed(1);
-    event.deducted = 0;
-    if (status === 'taken') { event.deducted = Math.min(m.stock, event.amount); m.stock = +(m.stock - event.deducted).toFixed(1); }
-    event.status = status; event.processedAt = Date.now(); event.snoozeUntil = null;
-    state.events[row.key] = event; audit(status === 'taken' ? '确认服用' : '跳过本次', event);
-    save(); render(); toast(status === 'taken' ? '已记录服用，库存减少 ' + event.deducted + ' ' + m.unit + '。' : '已跳过本次，库存不变。');
-  }
-  function snooze(row) {
-    var event = row.event || snapshot(row);
-    if (event.status !== 'raised' && event.status !== 'snoozed') { toast('请先触发提醒。'); return; }
-    event.status = 'snoozed'; event.snoozeUntil = Date.now() + 10 * 60000;
-    state.events[row.key] = event; audit('稍后提醒', event); save(); render(); toast('10 分钟后，同一条事件会重新变为待处理。');
-  }
-  function icon(m) { var tone = tones.includes(m.tone) ? m.tone : tones[0]; return '<div class="drug-icon ' + tone + '" aria-hidden="true">' + ['✦', '✳', '●', '◆'][tones.indexOf(tone)] + '</div>'; }
-  function renderToday() {
-    var today = dayKey(new Date()), current = rows(today), shown = rows(selectedDay);
-    var completed = current.filter(function (r) { return r.status === 'taken' || r.status === 'skipped'; }).length;
-    var taken = current.filter(function (r) { return r.status === 'taken'; }).length;
-    document.getElementById('today-date').textContent = new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }).format(new Date());
-    document.getElementById('selected-day').textContent = dateText(selectedDay);
-    document.getElementById('progress-done').textContent = completed;
-    document.getElementById('progress-total').textContent = '/ ' + current.length + ' 次';
-    document.getElementById('progress-fill').style.width = (current.length ? completed / current.length * 100 : 0) + '%';
-    document.querySelector('.progress-card p').textContent = '已完成决策';
-    document.getElementById('progress-caption').textContent = '已服用 ' + taken + ' 次，已跳过 ' + (completed - taken) + ' 次，待处理 ' + (current.length - completed) + ' 次';
-    var next = current.find(function (r) { return r.status === 'raised'; }) || current.find(function (r) { return r.status === 'scheduled' || r.status === 'snoozed'; });
-    document.getElementById('next-dose').innerHTML = next ? '<div class="hero-time">' + esc(next.status === 'snoozed' ? stamp(next.due).split(' ').pop() : next.rule.time) + '</div><div class="hero-drug">' + esc(next.med.name) + ' <span class="hero-status">' + label(next.status) + '</span></div><div class="hero-meta">' + esc(next.rule.amount + ' ' + next.med.unit + ' · ' + (next.med.note || '按已有计划')) + '</div><div class="hero-actions">' + (next.status === 'raised' ? '<button data-action="taken" data-key="' + esc(next.key) + '">确认已服用</button><button class="secondary" data-action="snooze" data-key="' + esc(next.key) + '">10 分钟后提醒</button>' : '<button data-action="raise" data-key="' + esc(next.key) + '">模拟触发提醒</button>') + '</div>' : '<div class="hero-empty">' + (current.length ? '今天的提醒均已处理' : '今天没有用药安排') + '</div><div class="hero-meta">可切换日期查看计划，或在药品页设置提醒规则。</div>';
-    var visible = shown.filter(function (r) { return filter === 'all' || r.status === filter || (filter === 'raised' && r.status === 'snoozed'); });
-    document.getElementById('schedule-list').innerHTML = visible.length ? visible.map(function (r) {
-      var actions = r.status === 'taken' || r.status === 'skipped' ? '<button data-action="' + (r.status === 'taken' ? 'skip' : 'taken') + '" data-key="' + esc(r.key) + '">改为' + (r.status === 'taken' ? '跳过' : '已服用') + '</button>' : '<button data-action="taken" data-key="' + esc(r.key) + '">已服用</button><button class="subtle" data-action="skip" data-key="' + esc(r.key) + '">跳过</button>' + (r.status === 'raised' ? '<button class="subtle" data-action="snooze" data-key="' + esc(r.key) + '">稍后</button>' : '');
-      return '<div class="schedule-item"><div class="schedule-time">' + esc(r.rule.time) + '</div><div class="schedule-center">' + icon(r.med) + '<div><div class="schedule-name">' + esc(r.med.name) + '</div><div class="schedule-detail">' + esc(r.rule.amount + ' ' + r.med.unit + ' · ' + (r.med.note || '按已有计划') + (r.status === 'snoozed' ? ' · 延后至 ' + stamp(r.due).split(' ').pop() : '')) + '</div></div></div><div class="schedule-actions"><span class="status ' + esc(r.status) + '">● ' + label(r.status) + '</span>' + actions + '</div></div>';
-    }).join('') : '<div class="empty-state"><span>▤</span>' + (shown.length ? '这个筛选条件下没有事件。' : '这一天没有符合规则的提醒。') + '</div>';
-    var low = state.medicines.filter(function (m) { return m.stock <= 5; });
-    document.getElementById('stock-insight').textContent = low.length ? low.map(function (m) { return m.name; }).join('、') + ' 库存较少，请核对实际剩余。' : '当前示例库存充足；确认服用后才会扣减。';
-    document.querySelectorAll('[data-filter]').forEach(function (button) { button.classList.toggle('active', button.dataset.filter === filter); });
+  function renderOverview() {
+    const week = M.week(ui.day).map(day => '<button class="week-day ' + (day === ui.day ? 'selected' : '') + '" data-action="day" data-day="' + day + '"><small>' + WEEK[M.dateOf(day).getDay()] + '</small><strong>' + +day.slice(8) + '</strong></button>').join('');
+    const filters = [['all', '全部'], ['scheduled', '待触发'], ['raised', '待处理'], ['taken', '已服用'], ['skipped', '已跳过']].map(item => '<button class="' + (ui.filter === item[0] ? 'active' : '') + '" data-action="filter" data-filter="' + item[0] + '">' + item[1] + '</button>').join('');
+    const rows = displayRows(ui.day).filter(row => ui.filter === 'all' || row.status === ui.filter || (ui.filter === 'raised' && row.status === 'snoozed'));
+    const events = rows.map(row => '<div class="event-row"><div class="rail"><button class="status-circle ' + row.status + '" data-action="event" data-key="' + esc(row.key) + '" aria-label="处理 ' + esc(row.name) + '">' + STATUS[row.status][1] + '</button><i class="rail-line"></i></div><button class="event-card" data-action="open-med" data-id="' + esc(row.medId) + '"><span class="event-copy"><span class="event-time">▣ ' + esc(row.time) + (row.status === 'snoozed' ? ' → ' + esc(timeText(row.due).split(' ')[1]) : '') + '</span><span class="event-name">' + esc(row.name) + '</span><span class="event-dose">' + esc(row.amount + ' ' + row.unit) + ' · ' + STATUS[row.status][0] + (row.manual ? ' · 补记' : '') + '</span></span><span class="swatch" style="background:' + esc(row.color) + '">' + esc(row.icon) + '</span></button></div>').join('');
+    return '<div class="week-strip"><button data-action="week-prev" aria-label="上一周">‹</button><div class="week-days">' + week + '</div><button data-action="week-next" aria-label="下一周">›</button></div><div class="filter-row">' + filters + '</div><div class="selection-actions" title="长按状态在原版可批量操作"><span>☑</span><span>⊗</span><span>♧</span><span>◷</span></div><div class="timeline">' + (events || '<div class="empty">这一天没有符合规则的提醒</div>') + '</div><p class="hint">点左侧状态图标处理提醒；点药品卡片查看药品与规则。</p>';
   }
   function renderMedicines() {
-    document.getElementById('medicine-count').textContent = state.medicines.length + ' 种';
-    document.getElementById('medicine-list').innerHTML = state.medicines.length ? state.medicines.map(function (m) {
-      var rules = m.reminders.map(function (r) { return '<div class="rule-row"><span><strong>' + esc(r.time) + '</strong> · ' + esc(r.amount) + ' ' + esc(m.unit) + ' · ' + esc(weekText(r.days)) + (r.active ? '' : ' · 已停用') + '</span><span><button data-action="edit-reminder" data-med="' + esc(m.id) + '" data-id="' + esc(r.id) + '">编辑</button><button data-action="toggle-reminder" data-med="' + esc(m.id) + '" data-id="' + esc(r.id) + '">' + (r.active ? '停用' : '启用') + '</button></span></div>'; }).join('');
-      return '<article class="medicine-card"><div class="medicine-card-top">' + icon(m) + '<div><div class="medicine-card-name">' + esc(m.name) + '</div><div class="medicine-card-note">' + esc(m.note || '无备注') + '</div></div></div><div class="medicine-card-body"><div><small>当前库存</small><strong class="' + (m.stock <= 5 ? 'stock-low' : '') + '">' + esc(m.stock) + ' ' + esc(m.unit) + '</strong></div><div><small>提醒规则</small><strong>' + m.reminders.length + ' 条</strong></div></div><div class="rule-list">' + rules + '</div><div class="medicine-card-foot"><button data-action="add-reminder" data-id="' + esc(m.id) + '">＋ 添加提醒</button><button data-action="stock" data-id="' + esc(m.id) + '">修正库存</button><button data-action="delete-medicine" data-id="' + esc(m.id) + '">删除药品</button></div></article>';
-    }).join('') : '<div class="empty-state"><span>＋</span>暂无药品，点击上方按钮开始。</div>';
+    return state.medicines.map(medicine => '<button class="medicine-card" data-action="open-med" data-id="' + esc(medicine.id) + '"><span class="medicine-top"><span class="swatch" style="background:' + esc(medicine.color) + '">' + esc(medicine.icon) + '</span><span class="medicine-text"><strong>' + esc(medicine.name) + '</strong><small>库存 ' + esc(medicine.stock + ' ' + medicine.unit) + (medicine.stock <= medicine.threshold ? '　⚠' : '') + '</small><small>' + medicine.reminders.length + ' 条提醒 · ' + esc(medicine.reminders.filter(rule => rule.active).map(rule => rule.time).join('、') || '已停用') + '</small></span><span class="drag">⠿</span></span><span class="tags">' + medicine.tags.map(tag => '<span>' + esc(tag) + '</span>').join('') + '</span></button>').join('') || '<div class="empty">还没有药品，点下方添加</div>';
   }
-  function renderHistory() {
-    var events = Object.values(state.events).filter(function (e) { return e.status === 'taken' || e.status === 'skipped'; }).sort(function (a, b) { return b.processedAt - a.processedAt; });
-    document.getElementById('history-count').textContent = '共 ' + events.length + ' 条';
-    document.getElementById('history-list').innerHTML = events.length ? events.map(function (e) { var m = med(e.medicineId), editable = m && m.reminders.some(function (r) { return r.id === e.reminderId; }); return '<div class="history-item"><span class="history-dot ' + esc(e.status) + '">' + (e.status === 'taken' ? '✓' : '–') + '</span><div><strong>' + esc(e.name) + ' · ' + label(e.status) + '</strong><small>计划 ' + esc(e.day + ' ' + e.time + ' · ' + e.amount + ' ' + e.unit) + (e.status === 'taken' ? ' · 库存 −' + esc(e.deducted) : '') + '</small>' + (editable ? '<button class="history-review" data-action="review-event" data-key="' + esc(e.day + ':' + e.reminderId) + '">查看并修正</button>' : '') + '</div><span class="history-time">' + esc(stamp(e.processedAt || e.scheduledAt || Date.now())) + '</span></div>'; }).join('') : '<div class="empty-state"><span>◷</span>暂无已处理的提醒事件。</div>';
+  function renderAnalysis() {
+    const options = '<div class="analysis-switch"><button class="' + (ui.analysis === 'chart' ? 'active' : '') + '" data-action="analysis" data-mode="chart" aria-label="图表">▥</button><button class="' + (ui.analysis === 'table' ? 'active' : '') + '" data-action="analysis" data-mode="table" aria-label="表格">▦</button><button class="' + (ui.analysis === 'calendar' ? 'active' : '') + '" data-action="analysis" data-mode="calendar" aria-label="日历">▣</button><select data-field="range" aria-label="分析时间范围"><option value="7"' + (ui.range === 7 ? ' selected' : '') + '>7 天</option><option value="30"' + (ui.range === 30 ? ' selected' : '') + '>30 天</option></select></div>';
+    const history = M.history(state), since = M.plusDays(M.dayKey(new Date()), 1 - ui.range);
+    const period = history.filter(item => item.day >= since);
+    const taken = period.filter(item => item.status === 'taken').length, skipped = period.filter(item => item.status === 'skipped').length;
+    if (ui.analysis === 'chart') {
+      const all = M.stats(state, M.dayKey(new Date()), ui.range); const max = Math.max(1, ...all.map(item => item.taken + item.skipped));
+      const bars = (ui.range === 7 ? all : all.filter((_, i) => i % 3 === 0)).map(item => '<div class="bar-col"><span class="bar-stack"><span class="bar-skipped" style="height:' + item.skipped / max * 100 + '%"></span><span class="bar-taken" style="height:' + item.taken / max * 100 + '%"></span></span><small>' + esc(item.label) + '</small></div>').join('');
+      return options + '<div class="chart-card"><div class="chart-bars">' + bars + '</div><div class="legend"><span>● 已服用</span><span>● 已跳过</span></div></div><div class="summaries"><div class="summary"><strong>最近 ' + ui.range + ' 天</strong><b>' + (taken + skipped ? Math.round(taken * 100 / (taken + skipped)) : 0) + '%</b><span>已服用 ' + taken + ' · 已跳过 ' + skipped + '</span></div><div class="summary"><strong>总记录</strong><b>' + history.length + '</b><span>每条来自用药事件</span></div></div>';
+    }
+    if (ui.analysis === 'table') return options + '<div class="table-card"><div class="table-row head"><span>处理时间</span><span>药品</span><span>状态</span></div>' + (history.map(item => '<div class="table-row"><span>' + esc(timeText(item.processedAt)) + '</span><span>' + esc(item.name) + '</span><span>' + STATUS[item.status][0] + '</span></div>').join('') || '<div class="empty">尚无记录</div>') + '</div>';
+    const date = M.dateOf(ui.day), first = new Date(date.getFullYear(), date.getMonth(), 1), firstDay = M.dayKey(first), start = M.plusDays(firstDay, -first.getDay());
+    const labels = WEEK.map(label => '<div class="calendar-cell day-label">' + label + '</div>').join('');
+    const cells = Array.from({ length: 42 }, (_, i) => { const day = M.plusDays(start, i), d = M.dateOf(day), classes = ['calendar-cell', d.getMonth() !== date.getMonth() ? 'outside' : '', day === ui.day ? 'selected' : '', M.scheduled(state, day).length ? 'has-event' : ''].join(' '); return '<button class="' + classes + '" data-action="calendar-day" data-day="' + day + '">' + d.getDate() + '</button>'; }).join('');
+    const daily = displayRows(ui.day).map(row => '<div>' + STATUS[row.status][1] + '　' + esc(row.time + '　' + row.name) + ' · ' + STATUS[row.status][0] + '</div>').join('') || '当天没有提醒事件';
+    return options + '<div class="calendar-card"><div class="calendar-head"><button data-action="month-prev">‹</button><span>' + esc(title(ui.day)) + '⌄</span><button data-action="month-next">›</button></div><div class="calendar-grid">' + labels + cells + '</div><div class="calendar-list"><strong>' + esc(ui.day) + '</strong>' + daily + '</div></div>';
   }
-  function render() { renderToday(); renderMedicines(); renderHistory(); }
-  function toast(message) { var el = document.getElementById('toast'); el.textContent = message; el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(function () { el.classList.remove('show'); }, 3300); }
-  function view(name) { ['today', 'medicines', 'history'].forEach(function (item) { document.getElementById('view-' + item).classList.toggle('hidden', item !== name); }); document.querySelectorAll('[data-view]').forEach(function (b) { b.classList.toggle('active', b.dataset.view === name); }); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-  function confirmBox(title, message, actionText, action) { document.getElementById('confirm-title').textContent = title; document.getElementById('confirm-message').textContent = message; document.getElementById('accept-confirm').textContent = actionText; confirmAction = action; document.getElementById('confirm-dialog').showModal(); }
-  function openNotification(row) { notificationKey = row.key; document.getElementById('notification-message').textContent = row.med.name + ' · ' + row.rule.amount + ' ' + row.med.unit + ' · 计划 ' + row.rule.time + '。请根据真实情况选择。'; document.getElementById('notification-dialog').showModal(); }
-  function openAdd() { document.getElementById('add-form').reset(); document.getElementById('medicine-dose').value = 1; document.getElementById('medicine-stock').value = 30; document.getElementById('medicine-unit').value = '片'; document.getElementById('medicine-time').value = '08:00'; document.getElementById('form-error').textContent = ''; document.getElementById('add-dialog').showModal(); }
-  function openReminder(m, rule) { editingMedicineId = m.id; editingReminderId = rule ? rule.id : null; document.getElementById('reminder-dialog-title').textContent = rule ? '编辑提醒' : '添加提醒'; document.getElementById('reminder-medicine-name').textContent = m.name + ' · 库存单位：' + m.unit; document.getElementById('reminder-time').value = rule ? rule.time : '08:00'; document.getElementById('reminder-dose').value = rule ? rule.amount : 1; document.querySelectorAll('#reminder-days input').forEach(function (input) { input.checked = rule ? rule.days.includes(+input.value) : true; }); document.getElementById('reminder-error').textContent = ''; document.getElementById('reminder-dialog').showModal(); }
-  document.querySelectorAll('[data-view]').forEach(function (b) { b.addEventListener('click', function () { view(b.dataset.view); }); });
-  document.querySelectorAll('[data-filter]').forEach(function (b) { b.addEventListener('click', function () { filter = b.dataset.filter; renderToday(); }); });
-  document.getElementById('prev-day').onclick = function () { var d = dateOf(selectedDay); d.setDate(d.getDate() - 1); selectedDay = dayKey(d); renderToday(); };
-  document.getElementById('next-day').onclick = function () { var d = dateOf(selectedDay); d.setDate(d.getDate() + 1); selectedDay = dayKey(d); renderToday(); };
-  document.getElementById('jump-today').onclick = function () { selectedDay = dayKey(new Date()); renderToday(); };
-  document.getElementById('open-add-today').onclick = openAdd; document.getElementById('open-add-medicines').onclick = openAdd;
-  [['close-add', 'add-dialog'], ['cancel-add', 'add-dialog'], ['close-reminder', 'reminder-dialog'], ['cancel-reminder', 'reminder-dialog'], ['close-stock', 'stock-dialog'], ['cancel-stock', 'stock-dialog'], ['close-notification', 'notification-dialog'], ['close-confirm', 'confirm-dialog'], ['cancel-confirm', 'confirm-dialog']].forEach(function (pair) { document.getElementById(pair[0]).onclick = function () { document.getElementById(pair[1]).close(); }; });
-  document.getElementById('accept-confirm').onclick = function () { document.getElementById('confirm-dialog').close(); if (confirmAction) confirmAction(); confirmAction = null; };
-  document.body.addEventListener('click', function (click) {
-    var b = click.target.closest('[data-action]'); if (!b) return;
-    var action = b.dataset.action, m, rule, row;
-    if (action === 'review-event') { selectedDay = b.dataset.key.slice(0, 10); filter = 'all'; renderToday(); view('today'); return; }
-    if (action === 'add-reminder' || action === 'edit-reminder' || action === 'toggle-reminder') {
-      m = med(b.dataset.med || b.dataset.id); rule = m.reminders.find(function (r) { return r.id === b.dataset.id; });
-      if (action === 'toggle-reminder') { rule.active = !rule.active; save(); render(); toast(rule.active ? '提醒已启用。' : '提醒已停用，已有事件保留。'); }
-      else openReminder(m, action === 'edit-reminder' ? rule : null); return;
-    }
-    if (action === 'stock') { m = med(b.dataset.id); stockMedicineId = m.id; document.getElementById('stock-medicine-name').textContent = m.name + ' · ' + m.unit; document.getElementById('stock-value').value = m.stock; document.getElementById('stock-error').textContent = ''; document.getElementById('stock-dialog').showModal(); return; }
-    if (action === 'delete-medicine') { m = med(b.dataset.id); confirmBox('删除药品？', '将移除“' + m.name + '”及提醒规则，已完成的记录保留。', '删除药品', function () { state.medicines = state.medicines.filter(function (item) { return item.id !== m.id; }); save(); render(); toast('药品已删除。'); }); return; }
-    row = rowFor(b.dataset.key); if (!row) return;
-    if (action === 'raise') { raise(row); render(); openNotification(rowFor(row.key)); }
-    else if (action === 'snooze') snooze(row);
-    else if (action === 'taken' || action === 'skip') {
-      if (action === 'taken' && row.med.stock < row.rule.amount && row.status !== 'taken') confirmBox('库存低于本次用量', '请核对真实药品。若确实已服用，仍可记录；库存不会低于 0。', '仍记为已服用', function () { outcome(rowFor(row.key), 'taken'); });
-      else outcome(row, action === 'taken' ? 'taken' : 'skipped');
-    }
+  function renderEditor() {
+    const m = ui.form;
+    const rules = m.reminders.map(rule => '<button class="reminder-card" data-action="open-rule" data-id="' + esc(rule.id) + '"><strong>▣　' + esc(rule.time) + '</strong><small>' + esc(rule.amount + ' ' + m.unit) + ' · ' + esc(reminderText(rule)) + '</small><span class="advanced-pill">⚙　高级设置　›</span></button>').join('');
+    return '<div class="editor-card"><div class="editor-head"><div class="swatch" style="background:' + esc(m.color) + '">' + esc(m.icon) + '</div><label class="field" style="flex:1;margin:0">药品名称<input data-field="name" value="' + esc(m.name) + '" placeholder="填写药品名称" maxlength="50"></label></div><div class="editor-tools"><span>⚙</span><span>▤</span><span>◇</span><span>□</span><span>▦</span></div></div><h2 class="subhead">药品信息</h2><div class="editor-card"><label class="field">备注<input data-field="notes" value="' + esc(m.notes) + '" placeholder="按已有方案填写"></label><label class="field">标签（逗号分隔）<input data-field="tags" value="' + esc(m.tags.join(',')) + '"></label><div class="field-row"><label class="field">库存<input type="number" min="0" step="0.1" data-field="stock" value="' + esc(m.stock) + '"></label><label class="field">单位<input data-field="unit" value="' + esc(m.unit) + '"></label></div><label class="field">低库存提醒阈值<input type="number" min="0" step="0.1" data-field="threshold" value="' + esc(m.threshold) + '"></label></div><h2 class="subhead">提醒</h2>' + rules + '<button class="add-rule" data-action="add-rule">⊕　添加提醒</button><div class="editor-actions"><button data-action="save-med">保存药品</button>' + (ui.editingId ? '<button class="danger" data-action="delete-med">删除药品</button>' : '') + '</div>';
+  }
+  function renderReminder() {
+    const r = ui.rule;
+    const weekdays = [1, 2, 3, 4, 5, 6, 0].map(day => '<button type="button" class="' + (r.days.includes(day) ? 'selected' : '') + '" data-action="weekday" data-day="' + day + '">' + WEEK[day] + '</button>').join('');
+    return '<div class="editor-card"><label class="field">提醒类型<select data-field="type"><option value="weekly"' + (r.type === 'weekly' ? ' selected' : '') + '>每周固定时间</option><option value="cycle"' + (r.type === 'cycle' ? ' selected' : '') + '>周期疗程</option></select></label><label class="field">提醒时间<input type="time" data-field="time" value="' + esc(r.time) + '"></label><label class="field">单次用量（' + esc(ui.form.unit) + '）<input type="number" min="0.1" step="0.1" data-field="amount" value="' + esc(r.amount) + '"></label>' + (r.type === 'weekly' ? '<div class="field">每周提醒日</div><div class="weekday-choices">' + weekdays + '</div>' : '<label class="field">周期起始日<input type="date" data-field="cycleStart" value="' + esc(r.cycleStart) + '"></label><div class="field-row"><label class="field">连续服用天数<input type="number" min="1" data-field="activeDays" value="' + esc(r.activeDays) + '"></label><label class="field">暂停天数<input type="number" min="1" data-field="pauseDays" value="' + esc(r.pauseDays) + '"></label></div>') + '<label class="check-row"><input type="checkbox" data-field="active"' + (r.active ? ' checked' : '') + '>启用提醒</label></div><p class="notice">演示只在小程序打开期间计算到点状态。后台提醒需要另行接入微信订阅消息服务。</p><div class="editor-actions"><button data-action="save-rule">保存提醒</button>' + (ui.reminderId ? '<button class="danger" data-action="delete-rule">删除提醒</button>' : '') + '</div>';
+  }
+  function renderManual() { return '<div class="editor-card"><label class="field">药品<select data-field="manualId">' + state.medicines.map(m => '<option value="' + esc(m.id) + '"' + (ui.manualId === m.id ? ' selected' : '') + '>' + esc(m.name) + '</option>').join('') + '</select></label><label class="field">实际服用数量<input type="number" min="0.1" step="0.1" data-field="manualAmount" value="' + esc(ui.manualAmount) + '"></label><p class="notice">补记会创建独立的已服用事件，并扣减相应库存。</p></div><div class="editor-actions"><button data-action="save-manual">记录这次服药</button></div>'; }
+  function renderSheet() {
+    if (!ui.sheetKey) return '';
+    const row = M.findRow(state, ui.sheetKey), event = state.events[ui.sheetKey];
+    if (!row && !event) return '';
+    const status = row ? row.status : event.status;
+    const actions = status === 'taken' ? [['skipped', '改为已跳过']] : status === 'skipped' ? [['taken', '改为已服用']] : status === 'raised' ? [['taken', '已服用'], ['skipped', '跳过本次'], ['snooze', '延后 10 分钟']] : [['taken', '已服用'], ['skipped', '跳过本次'], ['raise', '模拟触发提醒']];
+    return '<div class="overlay" data-action="close-sheet"><div class="sheet" role="dialog" aria-label="处理提醒"><h2>' + esc(row ? row.medicine.name : event.name) + ' · ' + esc(row ? row.reminder.time : event.time) + '</h2>' + actions.map(item => '<button data-action="event-op" data-op="' + item[0] + '">' + item[1] + '</button>').join('') + '<button data-action="close-sheet">取消</button></div></div>';
+  }
+  function render() {
+    const body = ui.screen === 'main' ? (ui.tab === 'overview' ? renderOverview() : ui.tab === 'medicines' ? renderMedicines() : renderAnalysis()) : ui.screen === 'editor' ? renderEditor() : ui.screen === 'reminder' ? renderReminder() : renderManual();
+    const tabbar = ui.screen === 'main' ? '<nav class="tabbar" aria-label="主导航">' + [['overview', '▣', '主页'], ['medicines', '◕', '药品'], ['analysis', '▥', '分析']].map(item => '<button class="' + (ui.tab === item[0] ? 'current' : '') + '" data-action="tab" data-tab="' + item[0] + '"><b>' + item[1] + '</b><span>' + item[2] + '</span></button>').join('') + '</nav>' : '';
+    const fab = ui.screen === 'main' && ui.tab !== 'analysis' ? '<button class="fab" data-action="' + (ui.tab === 'overview' ? 'manual' : 'add-med') + '">' + (ui.tab === 'overview' ? '▰　补记服药' : '⊕　添加药品') + '</button>' : '';
+    app.innerHTML = renderTop() + '<main class="scroll">' + body + '</main>' + tabbar + fab + (ui.menu ? '<div class="menu-pop"><button data-action="simulate">模拟触发下一条提醒</button><button data-action="reset">重置虚构数据</button><button data-action="about">关于与限制</button></div>' : '') + renderSheet();
+  }
+  function openMedicine(id) {
+    const medicine = med(id);
+    ui.editingId = medicine ? medicine.id : '';
+    ui.form = medicine ? clone(medicine) : { id: M.id('m'), name: '', color: '#5b6e9a', icon: '▣', stock: 0, unit: '片', threshold: 5, notes: '', tags: [], reminders: [] };
+    ui.screen = 'editor'; render();
+  }
+  function saveMedicine() {
+    const form = ui.form, stock = Number(form.stock), threshold = Number(form.threshold);
+    if (!form.name.trim() || !form.unit.trim() || !Number.isFinite(stock) || stock < 0 || !Number.isFinite(threshold) || threshold < 0) return alert('请填写有效的药品名称、单位和库存。');
+    form.name = form.name.trim(); form.unit = form.unit.trim(); form.stock = stock; form.threshold = threshold;
+    const index = state.medicines.findIndex(item => item.id === form.id);
+    if (index < 0) { form.reminders = [{ id: M.id('r'), type: 'weekly', time: '08:00', amount: 1, days: M.ALL_DAYS.slice(), active: true }]; state.medicines.push(clone(form)); }
+    else state.medicines[index] = clone(form);
+    save(); ui.screen = 'main'; ui.tab = 'medicines'; render();
+  }
+  function openRule(id) {
+    const medicine = med(ui.editingId), rule = medicine.reminders.find(item => item.id === id);
+    ui.reminderId = rule ? rule.id : '';
+    ui.rule = rule ? clone(rule) : { id: M.id('r'), type: 'weekly', time: '08:00', amount: 1, days: M.ALL_DAYS.slice(), active: true, cycleStart: M.dayKey(new Date()), activeDays: 21, pauseDays: 7 };
+    ui.rule.cycleStart ||= M.dayKey(new Date());
+    ui.rule.activeDays ??= 21;
+    ui.rule.pauseDays ??= 7;
+    ui.rule.days ||= M.ALL_DAYS.slice();
+    ui.screen = 'reminder'; render();
+  }
+  function saveRule() {
+    const r = ui.rule, amount = Number(r.amount), activeDays = Number(r.activeDays), pauseDays = Number(r.pauseDays);
+    if (!r.time || !Number.isFinite(amount) || amount <= 0 || (r.type === 'weekly' && !r.days.length) || (r.type === 'cycle' && (!r.cycleStart || !Number.isInteger(activeDays) || activeDays < 1 || !Number.isInteger(pauseDays) || pauseDays < 1))) return alert('请检查时间、用量和重复规则。');
+    r.amount = amount; r.activeDays = activeDays; r.pauseDays = pauseDays;
+    const medicine = med(ui.editingId), index = medicine.reminders.findIndex(item => item.id === r.id);
+    if (index < 0) medicine.reminders.push(clone(r)); else medicine.reminders[index] = clone(r);
+    save(); openMedicine(medicine.id);
+  }
+  function simulate() {
+    ui.menu = false;
+    const row = M.scheduled(state, M.dayKey(new Date())).find(item => ['scheduled', 'snoozed'].includes(item.status));
+    if (!row) { render(); return alert('今天没有待触发的提醒。'); }
+    M.raise(state, row.key); save(); ui.tab = 'overview'; ui.day = M.dayKey(new Date()); ui.screen = 'main'; ui.sheetKey = row.key; render();
+  }
+  app.addEventListener('click', event => {
+    const control = event.target.closest('[data-action]'); if (!control) return;
+    const action = control.dataset.action;
+    if (action === 'close-sheet' && event.target.closest('.sheet') && event.target !== control) return;
+    if (action === 'tab') { ui.tab = control.dataset.tab; ui.screen = 'main'; }
+    else if (action === 'day' || action === 'calendar-day') ui.day = control.dataset.day;
+    else if (action === 'week-prev' || action === 'week-next') ui.day = M.plusDays(ui.day, action === 'week-prev' ? -7 : 7);
+    else if (action === 'filter') ui.filter = control.dataset.filter;
+    else if (action === 'analysis') ui.analysis = control.dataset.mode;
+    else if (action === 'month-prev' || action === 'month-next') { const d = M.dateOf(ui.day); d.setMonth(d.getMonth() + (action === 'month-prev' ? -1 : 1), 1); ui.day = M.dayKey(d); }
+    else if (action === 'menu') ui.menu = !ui.menu;
+    else if (action === 'simulate') return simulate();
+    else if (action === 'reset') { ui.menu = false; if (confirm('恢复为虚构示例？当前预览数据会被重置。')) { state = M.seed(); save(); ui.day = M.dayKey(new Date()); ui.screen = 'main'; ui.tab = 'overview'; } }
+    else if (action === 'about') { ui.menu = false; alert('本项目参考开源 Android 应用 MedTimer 的界面与事件流程。数据仅保存在本机；网页预览和小程序原型均没有后台推送或医疗建议。'); }
+    else if (action === 'event') { if (control.dataset.key.includes(':manual-')) return alert('这是一条补记记录。'); ui.sheetKey = control.dataset.key; }
+    else if (action === 'close-sheet') ui.sheetKey = '';
+    else if (action === 'event-op') { const key = ui.sheetKey, op = control.dataset.op; if (op === 'raise') M.raise(state, key); else if (op === 'snooze') M.snooze(state, key, 10); else M.outcome(state, key, op); ui.sheetKey = ''; save(); }
+    else if (action === 'open-med') { if (med(control.dataset.id)) return openMedicine(control.dataset.id); }
+    else if (action === 'add-med') return openMedicine(null);
+    else if (action === 'save-med') return saveMedicine();
+    else if (action === 'delete-med') { if (confirm('删除药品及提醒规则？已完成的历史事件会保留。')) { state.medicines = state.medicines.filter(item => item.id !== ui.editingId); save(); ui.screen = 'main'; ui.tab = 'medicines'; } }
+    else if (action === 'add-rule') { if (!ui.editingId) return alert('请先保存药品，再添加提醒。'); return openRule(null); }
+    else if (action === 'open-rule') return openRule(control.dataset.id);
+    else if (action === 'weekday') { const day = Number(control.dataset.day); ui.rule.days = ui.rule.days.includes(day) ? ui.rule.days.filter(item => item !== day) : ui.rule.days.concat(day); }
+    else if (action === 'save-rule') return saveRule();
+    else if (action === 'delete-rule') { if (confirm('删除这条提醒？')) { const medicine = med(ui.editingId); medicine.reminders = medicine.reminders.filter(item => item.id !== ui.reminderId); save(); return openMedicine(medicine.id); } }
+    else if (action === 'manual') { ui.manualId = state.medicines[0]?.id || ''; ui.manualAmount = 1; ui.screen = 'manual'; }
+    else if (action === 'save-manual') { if (!M.manualDose(state, ui.manualId, Number(ui.manualAmount))) return alert('请选择药品并填写有效用量。'); save(); ui.screen = 'main'; ui.tab = 'overview'; ui.day = M.dayKey(new Date()); }
+    else if (action === 'back') { if (ui.screen === 'reminder') return openMedicine(ui.editingId); ui.screen = 'main'; }
+    render();
   });
-  document.querySelectorAll('[data-notification-action]').forEach(function (b) { b.onclick = function () { document.getElementById('notification-dialog').close(); var row = rowFor(notificationKey); if (!row) return; if (b.dataset.notificationAction === 'snooze') snooze(row); else outcome(row, b.dataset.notificationAction === 'taken' ? 'taken' : 'skipped'); }; });
-  document.getElementById('add-form').onsubmit = function (event) {
-    event.preventDefault(); var name = document.getElementById('medicine-name').value.trim(), amount = +document.getElementById('medicine-dose').value, time = document.getElementById('medicine-time').value, stock = +document.getElementById('medicine-stock').value, unit = document.getElementById('medicine-unit').value.trim(), error = document.getElementById('form-error');
-    if (!name || !time || !unit || !Number.isFinite(amount) || amount <= 0 || amount > 9999 || !Number.isFinite(stock) || stock < 0 || stock > 9999) { error.textContent = '请填写有效的药品、时间、单次用量和库存。'; return; }
-    if (state.medicines.some(function (item) { return item.name === name; })) { error.textContent = '药品已存在，请在其卡片中添加另一条提醒。'; return; }
-    state.medicines.push({ id: id('m'), name: name, stock: stock, unit: unit, note: document.getElementById('medicine-note').value.trim(), tone: tones[state.medicines.length % 4], reminders: [{ id: id('r'), time: time, amount: amount, days: daysAll.slice(), active: true }] });
-    save(); render(); document.getElementById('add-dialog').close(); view('medicines'); toast('药品及第一条每日提醒已添加。');
-  };
-  document.getElementById('reminder-form').onsubmit = function (event) {
-    event.preventDefault(); var m = med(editingMedicineId), time = document.getElementById('reminder-time').value, amount = +document.getElementById('reminder-dose').value, days = Array.from(document.querySelectorAll('#reminder-days input:checked')).map(function (input) { return +input.value; }), error = document.getElementById('reminder-error');
-    if (!time || !Number.isFinite(amount) || amount <= 0 || amount > 9999 || !days.length) { error.textContent = '请设置时间、有效用量和至少一个星期。'; return; }
-    if (m.reminders.some(function (r) { return r.id !== editingReminderId && r.time === time && r.days.some(function (d) { return days.includes(d); }); })) { error.textContent = '同一药品在所选星期的这个时间已有提醒。'; return; }
-    var rule = m.reminders.find(function (r) { return r.id === editingReminderId; });
-    if (rule) { rule.time = time; rule.amount = amount; rule.days = days; } else m.reminders.push({ id: id('r'), time: time, amount: amount, days: days, active: true });
-    save(); render(); document.getElementById('reminder-dialog').close(); toast('提醒规则已保存。');
-  };
-  document.getElementById('stock-form').onsubmit = function (event) { event.preventDefault(); var value = +document.getElementById('stock-value').value; if (!Number.isFinite(value) || value < 0 || value > 9999) { document.getElementById('stock-error').textContent = '请输入有效库存。'; return; } var m = med(stockMedicineId); m.stock = value; state.audit.push({ at: Date.now(), action: '修正库存', name: m.name, value: value }); save(); render(); document.getElementById('stock-dialog').close(); toast('库存已修正。'); };
-  document.getElementById('simulate-reminder').onclick = function () { var all = rows(dayKey(new Date())), next = all.find(function (r) { return r.status === 'scheduled' || r.status === 'snoozed'; }) || all.find(function (r) { return r.status === 'raised'; }); if (!next) { toast('今天没有可触发的提醒。'); return; } if (next.status !== 'raised') raise(next); render(); openNotification(rowFor(next.key)); };
-  document.getElementById('reset-demo').onclick = function () { confirmBox('重置演示数据？', '药品、提醒规则与记录会恢复为虚构示例。', '重置数据', function () { state = seed(); selectedDay = dayKey(new Date()); filter = 'all'; save(); reconcile(); render(); view('today'); toast('演示数据已重置。'); }); };
-  document.getElementById('export-history').onclick = function () { var url = URL.createObjectURL(new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), medicines: state.medicines, events: state.events, audit: state.audit }, null, 2)], { type: 'application/json' })); var link = document.createElement('a'); link.href = url; link.download = '安心服药-演示数据.json'; link.click(); setTimeout(function () { URL.revokeObjectURL(url); }, 1000); toast('演示数据已导出。'); };
-  reconcile(); render(); setInterval(reconcile, 15000);
+  app.addEventListener('input', event => {
+    const field = event.target.dataset.field; if (!field) return;
+    const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
+    if (ui.screen === 'editor') { if (field === 'tags') ui.form.tags = value.split(/[,，]/).map(item => item.trim()).filter(Boolean); else ui.form[field] = value; }
+    else if (ui.screen === 'reminder') ui.rule[field] = value;
+    else if (ui.screen === 'manual') ui[field] = value;
+    else if (field === 'range') { ui.range = Number(value); render(); }
+  });
+  app.addEventListener('change', event => { if (event.target.dataset.field === 'range') { ui.range = Number(event.target.value); render(); } else if (ui.screen === 'reminder' && event.target.dataset.field === 'type') { ui.rule.type = event.target.value; render(); } });
+  M.reconcile(state, new Date()); save(); render();
+  setInterval(() => { if (M.reconcile(state, new Date())) { save(); render(); } }, 15000);
+  document.getElementById('clock').textContent = new Intl.DateTimeFormat('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
 }());
 
 </script>

@@ -1,19 +1,23 @@
-# Demo 的交互与领域模型
+# MedTimer 到微信小程序的界面与逻辑映射
 
-这个网页 Demo 参考 MedTimer 的[提醒流程](https://github.com/Futsch1/medTimer/blob/main/docs/reminder_flow.md)、[Reminder](https://github.com/Futsch1/medTimer/blob/main/core/domain/src/main/java/com/futsch1/medtimer/core/domain/model/Reminder.kt)、[ReminderEvent](https://github.com/Futsch1/medTimer/blob/main/core/domain/src/main/java/com/futsch1/medtimer/core/domain/model/ReminderEvent.kt) 和[使用场景](https://github.com/Futsch1/medTimer/blob/main/docs/UseCases.md)，保留了第一版最关键的关系：
+参考了原项目的 [界面截图](https://github.com/Futsch1/medTimer/tree/main/docs)、[提醒生命周期](https://github.com/Futsch1/medTimer/blob/main/docs/reminder_flow.md)、[提醒规则](https://github.com/Futsch1/medTimer/blob/main/core/domain/src/main/java/com/futsch1/medtimer/core/domain/model/Reminder.kt)、[事件模型](https://github.com/Futsch1/medTimer/blob/main/core/domain/src/main/java/com/futsch1/medtimer/core/domain/model/ReminderEvent.kt) 和 [Use Cases](https://github.com/Futsch1/medTimer/blob/main/docs/UseCases.md)。小程序采用微信原生组件重建，不直接运行 Android 代码。
+
+| 原项目 | 小程序对应界面 / 行为 |
+| --- | --- |
+| Overview 周视图、时间轴、状态圆点、补记按钮 | 主页周切换、时间轴、状态操作菜单、补记服药 |
+| Medicines 卡片、库存、提醒时间、药品编辑 | 药品卡片、库存阈值、药品编辑与多提醒规则 |
+| Reminder 编辑与高级重复规则 | 每周固定时间、周期疗程、启停和用量 |
+| Analysis 图表、表格、日历 | 近 7 / 30 天柱图、处理历史表、月历 |
+| 确认、跳过、延后、改判 | 同一事件状态变化及库存修正 |
 
 ```text
 药品 Medicine
-  └─ 多条提醒规则 Reminder（时间、用量、星期、启停）
+  └─ 多条提醒规则 Reminder（时间、用量、每周 / 周期、启停）
        └─ 某天的一次事件 ReminderEvent
             待触发 → 待处理 → 已服用 / 已跳过
                          ↘ 延后 → 待处理
 ```
 
-- 计划由提醒规则按日期计算，不为每一天预存一条静态清单。停用规则后不会再产生新事件，已有事件与历史仍保留。
-- 到点时创建事件；页面内的「触发下一条提醒」用于无须等待实际时间就演示同一状态转换。
-- 「延后」给事件设置新的触发时间，不增加新事件，也不计为服药完成。
-- 只有「已服用」扣减库存；「已跳过」不扣。改判已服用为已跳过时返还原扣减量，反向改判则扣减。
-- 历史显示已经处理的事件，药品被删除后历史快照仍保留。JSON 导出包含药品、事件和操作审计信息。
+计划由规则按日期计算，不预存未来清单。到点时创建事件；「模拟触发下一条提醒」走同一状态转换，便于立即演示。延后改变同一事件下次触发时间。仅已服用会扣减库存，改判会先返还原扣减量；补记创建独立事件。历史保存事件快照，因此删除药品后仍显示已处理记录。网页和小程序使用相同的 `miniprogram/lib/model.js`。
 
-网页只能在打开期间执行时间检查，不能替代 Android 的 AlarmManager、通知和后台 Worker。此 Demo 暂不实现原项目的周期疗程、间隔/关联提醒、位置延后、真实系统通知、复杂库存阈值、云同步或多设备使用。示例药品是虚构数据。
+当前是可交互原型，覆盖主路径，不等于 Android 完整功能移植。未实现 Android 后台闹钟 / 系统通知、微信订阅消息、间隔及关联提醒、位置延后、多选批量操作、导入导出、云同步或跨设备使用。页面中的装饰性操作栏仅还原视觉。所有数据只在当前浏览器或小程序本机保存。真实小程序发布、服务端定时任务和订阅消息需要另行配置微信 AppID 与后端。

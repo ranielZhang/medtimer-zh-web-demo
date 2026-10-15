@@ -1,177 +1,162 @@
 (function () {
   'use strict';
-  var KEY = 'medtimer-zh-demo-v2';
-  var daysAll = [0, 1, 2, 3, 4, 5, 6];
-  var tones = ['green', 'orange', 'blue', 'purple'];
-  var state = load();
-  var selectedDay = dayKey(new Date());
-  var filter = 'all', editingMedicineId, editingReminderId, stockMedicineId, notificationKey, confirmAction, toastTimer;
-  function dayKey(date) { return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-'); }
-  function dateOf(day) { return new Date(+day.slice(0, 4), +day.slice(5, 7) - 1, +day.slice(8, 10)); }
-  function at(day, time) { return dateOf(day).getTime() + (+time.slice(0, 2) * 60 + +time.slice(3, 5)) * 60000; }
-  function id(prefix) { return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
-  function med(idValue) { return state.medicines.find(function (m) { return m.id === idValue; }); }
-  function esc(value) { return String(value).replace(/[&<>"']/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]; }); }
-  function label(status) { return { scheduled: '待触发', raised: '待处理', snoozed: '已延后', taken: '已服用', skipped: '已跳过' }[status]; }
-  function dateText(day) { return new Intl.DateTimeFormat('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' }).format(dateOf(day)); }
-  function stamp(value) { return new Intl.DateTimeFormat('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(value)); }
-  function weekText(days) { return days.length === 7 ? '每天' : '周' + [1, 2, 3, 4, 5, 6, 0].filter(function (day) { return days.includes(day); }).map(function (day) { return '一二三四五六日'[day === 0 ? 6 : day - 1]; }).join('、'); }
-  function seed() { return { version: 2, medicines: [
-    { id: 'm1', name: '示例药品 A', stock: 18, unit: '片', note: '早餐后', tone: 'green', reminders: [{ id: 'r1', time: '08:00', amount: 1, days: daysAll.slice(), active: true }, { id: 'r2', time: '20:00', amount: 1, days: daysAll.slice(), active: true }] },
-    { id: 'm2', name: '示例药品 B', stock: 8, unit: '粒', note: '午餐后', tone: 'orange', reminders: [{ id: 'r3', time: '12:30', amount: 1, days: [1, 2, 3, 4, 5], active: true }] },
-    { id: 'm3', name: '示例药品 C', stock: 24, unit: '片', note: '按已有计划服用', tone: 'blue', reminders: [{ id: 'r4', time: '21:00', amount: 1, days: daysAll.slice(), active: true }] }
-  ], events: {}, audit: [] }; }
-  function load() {
-    try {
-      var saved = JSON.parse(localStorage.getItem(KEY));
-      if (saved && saved.version === 2 && Array.isArray(saved.medicines) && saved.events) return saved;
-      var old = JSON.parse(localStorage.getItem('medtimer-zh-demo-v1'));
-      if (old && Array.isArray(old.medicines)) {
-        var migrated = { version: 2, medicines: [], events: {}, audit: [] };
-        old.medicines.forEach(function (m, index) {
-          var amount = parseFloat(String(m.dose || '').match(/\d+(?:\.\d+)?/)?.[0]) || 1;
-          var rid = 'old-' + m.id;
-          migrated.medicines.push({ id: m.id, name: m.name, stock: Number(m.stock) || 0, unit: m.unit || '片', note: m.note || '', tone: m.tone || tones[index % 4], reminders: [{ id: rid, time: m.time || '08:00', amount: amount, days: daysAll.slice(), active: true }] });
-          Object.keys(old.daily || {}).forEach(function (key) {
-            if (!key.endsWith(':' + m.id)) return;
-            var entry = old.daily[key], day = key.slice(0, 10);
-            if (entry.status === 'pending') return;
-            migrated.events[day + ':' + rid] = { day: day, medicineId: m.id, reminderId: rid, name: m.name, unit: m.unit || '片', amount: amount, time: m.time || '08:00', status: entry.status, deducted: Number(entry.deducted) || 0, snoozeUntil: entry.until ? at(day, entry.until) : null, processedAt: Date.now() };
-          });
-        });
-        return migrated;
-      }
-    } catch (error) { /* Invalid local data falls back to synthetic examples. */ }
-    return seed();
+  const M = window.MedTimerModel;
+  const STORE = 'medtimer-wechat-preview-v1';
+  const STATUS = { scheduled: ['待触发', '▣'], raised: ['待处理', '♧'], snoozed: ['已延后', '◷'], taken: ['已服用', '✓'], skipped: ['已跳过', '×'] };
+  const WEEK = ['日', '一', '二', '三', '四', '五', '六'];
+  const app = document.getElementById('app');
+  let state;
+  try { state = JSON.parse(localStorage.getItem(STORE)); } catch (_) { state = null; }
+  if (!M.valid(state)) state = M.seed();
+  const ui = { tab: 'overview', screen: 'main', day: M.dayKey(new Date()), filter: 'all', analysis: 'chart', range: 7, editingId: '', reminderId: '', form: null, rule: null, manualId: '', manualAmount: 1, sheetKey: '', menu: false };
+  function esc(value) { return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char])); }
+  function clone(value) { return JSON.parse(JSON.stringify(value)); }
+  function save() { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (_) { alert('当前浏览器无法保存本地数据。'); } }
+  function title(day) { const date = M.dateOf(day); return (date.getMonth() + 1) + '月 ' + date.getFullYear(); }
+  function timeText(value) { const date = new Date(value); return (date.getMonth() + 1) + '/' + date.getDate() + ' ' + String(date.getHours()).padStart(2, '0') + ':' + String(date.getMinutes()).padStart(2, '0'); }
+  function med(id) { return state.medicines.find(item => item.id === id); }
+  function reminderText(rule) { return rule.type === 'cycle' ? rule.activeDays + ' 天服用 / ' + rule.pauseDays + ' 天暂停' : (rule.days.length === 7 ? '每天' : '每周 ' + rule.days.map(day => WEEK[day]).join('、')) + (rule.active ? '' : ' · 已停用'); }
+  function renderTop() {
+    const heading = ui.screen === 'editor' ? (ui.editingId ? ui.form.name : '添加药品') : ui.screen === 'reminder' ? (ui.reminderId ? '编辑提醒' : '添加提醒') : ui.screen === 'manual' ? '补记服药' : ui.tab === 'overview' ? '主页 · ' + title(ui.day) : ui.tab === 'medicines' ? '药品' : '分析';
+    return '<header class="topbar">' + (ui.screen !== 'main' ? '<button class="back" data-action="back" aria-label="返回">‹</button>' : '') + '<h1>' + esc(heading) + '</h1><button class="capsule" aria-label="微信小程序菜单">···　◯</button><button class="more" data-action="menu" aria-label="更多">⋮</button></header>';
   }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (error) { toast('浏览器未能保存数据。'); } }
-  function rows(day) {
-    var result = [];
-    state.medicines.forEach(function (m) { m.reminders.forEach(function (r) {
-      var key = day + ':' + r.id, event = state.events[key];
-      if ((!r.active || !r.days.includes(dateOf(day).getDay())) && !event) return;
-      result.push({ key: key, day: day, med: m, rule: r, event: event, status: event ? event.status : 'scheduled', due: event && event.status === 'snoozed' ? event.snoozeUntil : at(day, r.time) });
-    }); });
-    return result.sort(function (a, b) { return a.due - b.due || a.med.name.localeCompare(b.med.name); });
+  function displayRows(day) {
+    const rows = M.scheduled(state, day).map(row => ({ key: row.key, medId: row.medicine.id, name: row.medicine.name, color: row.medicine.color, icon: row.medicine.icon, amount: row.reminder.amount, unit: row.medicine.unit, time: row.reminder.time, status: row.status, due: row.dueAt }));
+    Object.values(state.events).filter(event => event.manual && event.day === day).forEach(event => { const medicine = med(event.medicineId); rows.push({ key: event.key, medId: event.medicineId, name: event.name, color: medicine?.color || '#8891aa', icon: medicine?.icon || '▣', amount: event.amount, unit: event.unit, time: event.time, status: event.status, manual: true }); });
+    return rows.sort((a, b) => a.time.localeCompare(b.time));
   }
-  function rowFor(key) { return rows(key.slice(0, 10)).find(function (row) { return row.key === key; }); }
-  function snapshot(row) { return { day: row.day, medicineId: row.med.id, reminderId: row.rule.id, name: row.med.name, amount: row.rule.amount, unit: row.med.unit, time: row.rule.time, status: 'scheduled', scheduledAt: at(row.day, row.rule.time), raisedAt: null, processedAt: null, snoozeUntil: null, deducted: 0 }; }
-  function audit(action, event) { state.audit.push({ at: Date.now(), action: action, name: event.name, key: event.day + ':' + event.reminderId }); }
-  function raise(row) {
-    var event = row.event || snapshot(row);
-    if (event.status === 'taken' || event.status === 'skipped') return false;
-    event.status = 'raised'; event.raisedAt = Date.now(); event.snoozeUntil = null;
-    state.events[row.key] = event; audit('提醒触发', event); save(); return true;
-  }
-  function reconcile() {
-    var changed = false, now = Date.now();
-    rows(dayKey(new Date())).forEach(function (row) { if ((row.status === 'scheduled' || row.status === 'snoozed') && row.due <= now) changed = raise(row) || changed; });
-    if (changed) render();
-  }
-  function outcome(row, status) {
-    var event = row.event || snapshot(row), m = row.med;
-    if (event.status === status) return;
-    if (event.status === 'taken') m.stock = +(m.stock + event.deducted).toFixed(1);
-    event.deducted = 0;
-    if (status === 'taken') { event.deducted = Math.min(m.stock, event.amount); m.stock = +(m.stock - event.deducted).toFixed(1); }
-    event.status = status; event.processedAt = Date.now(); event.snoozeUntil = null;
-    state.events[row.key] = event; audit(status === 'taken' ? '确认服用' : '跳过本次', event);
-    save(); render(); toast(status === 'taken' ? '已记录服用，库存减少 ' + event.deducted + ' ' + m.unit + '。' : '已跳过本次，库存不变。');
-  }
-  function snooze(row) {
-    var event = row.event || snapshot(row);
-    if (event.status !== 'raised' && event.status !== 'snoozed') { toast('请先触发提醒。'); return; }
-    event.status = 'snoozed'; event.snoozeUntil = Date.now() + 10 * 60000;
-    state.events[row.key] = event; audit('稍后提醒', event); save(); render(); toast('10 分钟后，同一条事件会重新变为待处理。');
-  }
-  function icon(m) { var tone = tones.includes(m.tone) ? m.tone : tones[0]; return '<div class="drug-icon ' + tone + '" aria-hidden="true">' + ['✦', '✳', '●', '◆'][tones.indexOf(tone)] + '</div>'; }
-  function renderToday() {
-    var today = dayKey(new Date()), current = rows(today), shown = rows(selectedDay);
-    var completed = current.filter(function (r) { return r.status === 'taken' || r.status === 'skipped'; }).length;
-    var taken = current.filter(function (r) { return r.status === 'taken'; }).length;
-    document.getElementById('today-date').textContent = new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }).format(new Date());
-    document.getElementById('selected-day').textContent = dateText(selectedDay);
-    document.getElementById('progress-done').textContent = completed;
-    document.getElementById('progress-total').textContent = '/ ' + current.length + ' 次';
-    document.getElementById('progress-fill').style.width = (current.length ? completed / current.length * 100 : 0) + '%';
-    document.querySelector('.progress-card p').textContent = '已完成决策';
-    document.getElementById('progress-caption').textContent = '已服用 ' + taken + ' 次，已跳过 ' + (completed - taken) + ' 次，待处理 ' + (current.length - completed) + ' 次';
-    var next = current.find(function (r) { return r.status === 'raised'; }) || current.find(function (r) { return r.status === 'scheduled' || r.status === 'snoozed'; });
-    document.getElementById('next-dose').innerHTML = next ? '<div class="hero-time">' + esc(next.status === 'snoozed' ? stamp(next.due).split(' ').pop() : next.rule.time) + '</div><div class="hero-drug">' + esc(next.med.name) + ' <span class="hero-status">' + label(next.status) + '</span></div><div class="hero-meta">' + esc(next.rule.amount + ' ' + next.med.unit + ' · ' + (next.med.note || '按已有计划')) + '</div><div class="hero-actions">' + (next.status === 'raised' ? '<button data-action="taken" data-key="' + esc(next.key) + '">确认已服用</button><button class="secondary" data-action="snooze" data-key="' + esc(next.key) + '">10 分钟后提醒</button>' : '<button data-action="raise" data-key="' + esc(next.key) + '">模拟触发提醒</button>') + '</div>' : '<div class="hero-empty">' + (current.length ? '今天的提醒均已处理' : '今天没有用药安排') + '</div><div class="hero-meta">可切换日期查看计划，或在药品页设置提醒规则。</div>';
-    var visible = shown.filter(function (r) { return filter === 'all' || r.status === filter || (filter === 'raised' && r.status === 'snoozed'); });
-    document.getElementById('schedule-list').innerHTML = visible.length ? visible.map(function (r) {
-      var actions = r.status === 'taken' || r.status === 'skipped' ? '<button data-action="' + (r.status === 'taken' ? 'skip' : 'taken') + '" data-key="' + esc(r.key) + '">改为' + (r.status === 'taken' ? '跳过' : '已服用') + '</button>' : '<button data-action="taken" data-key="' + esc(r.key) + '">已服用</button><button class="subtle" data-action="skip" data-key="' + esc(r.key) + '">跳过</button>' + (r.status === 'raised' ? '<button class="subtle" data-action="snooze" data-key="' + esc(r.key) + '">稍后</button>' : '');
-      return '<div class="schedule-item"><div class="schedule-time">' + esc(r.rule.time) + '</div><div class="schedule-center">' + icon(r.med) + '<div><div class="schedule-name">' + esc(r.med.name) + '</div><div class="schedule-detail">' + esc(r.rule.amount + ' ' + r.med.unit + ' · ' + (r.med.note || '按已有计划') + (r.status === 'snoozed' ? ' · 延后至 ' + stamp(r.due).split(' ').pop() : '')) + '</div></div></div><div class="schedule-actions"><span class="status ' + esc(r.status) + '">● ' + label(r.status) + '</span>' + actions + '</div></div>';
-    }).join('') : '<div class="empty-state"><span>▤</span>' + (shown.length ? '这个筛选条件下没有事件。' : '这一天没有符合规则的提醒。') + '</div>';
-    var low = state.medicines.filter(function (m) { return m.stock <= 5; });
-    document.getElementById('stock-insight').textContent = low.length ? low.map(function (m) { return m.name; }).join('、') + ' 库存较少，请核对实际剩余。' : '当前示例库存充足；确认服用后才会扣减。';
-    document.querySelectorAll('[data-filter]').forEach(function (button) { button.classList.toggle('active', button.dataset.filter === filter); });
+  function renderOverview() {
+    const week = M.week(ui.day).map(day => '<button class="week-day ' + (day === ui.day ? 'selected' : '') + '" data-action="day" data-day="' + day + '"><small>' + WEEK[M.dateOf(day).getDay()] + '</small><strong>' + +day.slice(8) + '</strong></button>').join('');
+    const filters = [['all', '全部'], ['scheduled', '待触发'], ['raised', '待处理'], ['taken', '已服用'], ['skipped', '已跳过']].map(item => '<button class="' + (ui.filter === item[0] ? 'active' : '') + '" data-action="filter" data-filter="' + item[0] + '">' + item[1] + '</button>').join('');
+    const rows = displayRows(ui.day).filter(row => ui.filter === 'all' || row.status === ui.filter || (ui.filter === 'raised' && row.status === 'snoozed'));
+    const events = rows.map(row => '<div class="event-row"><div class="rail"><button class="status-circle ' + row.status + '" data-action="event" data-key="' + esc(row.key) + '" aria-label="处理 ' + esc(row.name) + '">' + STATUS[row.status][1] + '</button><i class="rail-line"></i></div><button class="event-card" data-action="open-med" data-id="' + esc(row.medId) + '"><span class="event-copy"><span class="event-time">▣ ' + esc(row.time) + (row.status === 'snoozed' ? ' → ' + esc(timeText(row.due).split(' ')[1]) : '') + '</span><span class="event-name">' + esc(row.name) + '</span><span class="event-dose">' + esc(row.amount + ' ' + row.unit) + ' · ' + STATUS[row.status][0] + (row.manual ? ' · 补记' : '') + '</span></span><span class="swatch" style="background:' + esc(row.color) + '">' + esc(row.icon) + '</span></button></div>').join('');
+    return '<div class="week-strip"><button data-action="week-prev" aria-label="上一周">‹</button><div class="week-days">' + week + '</div><button data-action="week-next" aria-label="下一周">›</button></div><div class="filter-row">' + filters + '</div><div class="selection-actions" title="长按状态在原版可批量操作"><span>☑</span><span>⊗</span><span>♧</span><span>◷</span></div><div class="timeline">' + (events || '<div class="empty">这一天没有符合规则的提醒</div>') + '</div><p class="hint">点左侧状态图标处理提醒；点药品卡片查看药品与规则。</p>';
   }
   function renderMedicines() {
-    document.getElementById('medicine-count').textContent = state.medicines.length + ' 种';
-    document.getElementById('medicine-list').innerHTML = state.medicines.length ? state.medicines.map(function (m) {
-      var rules = m.reminders.map(function (r) { return '<div class="rule-row"><span><strong>' + esc(r.time) + '</strong> · ' + esc(r.amount) + ' ' + esc(m.unit) + ' · ' + esc(weekText(r.days)) + (r.active ? '' : ' · 已停用') + '</span><span><button data-action="edit-reminder" data-med="' + esc(m.id) + '" data-id="' + esc(r.id) + '">编辑</button><button data-action="toggle-reminder" data-med="' + esc(m.id) + '" data-id="' + esc(r.id) + '">' + (r.active ? '停用' : '启用') + '</button></span></div>'; }).join('');
-      return '<article class="medicine-card"><div class="medicine-card-top">' + icon(m) + '<div><div class="medicine-card-name">' + esc(m.name) + '</div><div class="medicine-card-note">' + esc(m.note || '无备注') + '</div></div></div><div class="medicine-card-body"><div><small>当前库存</small><strong class="' + (m.stock <= 5 ? 'stock-low' : '') + '">' + esc(m.stock) + ' ' + esc(m.unit) + '</strong></div><div><small>提醒规则</small><strong>' + m.reminders.length + ' 条</strong></div></div><div class="rule-list">' + rules + '</div><div class="medicine-card-foot"><button data-action="add-reminder" data-id="' + esc(m.id) + '">＋ 添加提醒</button><button data-action="stock" data-id="' + esc(m.id) + '">修正库存</button><button data-action="delete-medicine" data-id="' + esc(m.id) + '">删除药品</button></div></article>';
-    }).join('') : '<div class="empty-state"><span>＋</span>暂无药品，点击上方按钮开始。</div>';
+    return state.medicines.map(medicine => '<button class="medicine-card" data-action="open-med" data-id="' + esc(medicine.id) + '"><span class="medicine-top"><span class="swatch" style="background:' + esc(medicine.color) + '">' + esc(medicine.icon) + '</span><span class="medicine-text"><strong>' + esc(medicine.name) + '</strong><small>库存 ' + esc(medicine.stock + ' ' + medicine.unit) + (medicine.stock <= medicine.threshold ? '　⚠' : '') + '</small><small>' + medicine.reminders.length + ' 条提醒 · ' + esc(medicine.reminders.filter(rule => rule.active).map(rule => rule.time).join('、') || '已停用') + '</small></span><span class="drag">⠿</span></span><span class="tags">' + medicine.tags.map(tag => '<span>' + esc(tag) + '</span>').join('') + '</span></button>').join('') || '<div class="empty">还没有药品，点下方添加</div>';
   }
-  function renderHistory() {
-    var events = Object.values(state.events).filter(function (e) { return e.status === 'taken' || e.status === 'skipped'; }).sort(function (a, b) { return b.processedAt - a.processedAt; });
-    document.getElementById('history-count').textContent = '共 ' + events.length + ' 条';
-    document.getElementById('history-list').innerHTML = events.length ? events.map(function (e) { var m = med(e.medicineId), editable = m && m.reminders.some(function (r) { return r.id === e.reminderId; }); return '<div class="history-item"><span class="history-dot ' + esc(e.status) + '">' + (e.status === 'taken' ? '✓' : '–') + '</span><div><strong>' + esc(e.name) + ' · ' + label(e.status) + '</strong><small>计划 ' + esc(e.day + ' ' + e.time + ' · ' + e.amount + ' ' + e.unit) + (e.status === 'taken' ? ' · 库存 −' + esc(e.deducted) : '') + '</small>' + (editable ? '<button class="history-review" data-action="review-event" data-key="' + esc(e.day + ':' + e.reminderId) + '">查看并修正</button>' : '') + '</div><span class="history-time">' + esc(stamp(e.processedAt || e.scheduledAt || Date.now())) + '</span></div>'; }).join('') : '<div class="empty-state"><span>◷</span>暂无已处理的提醒事件。</div>';
+  function renderAnalysis() {
+    const options = '<div class="analysis-switch"><button class="' + (ui.analysis === 'chart' ? 'active' : '') + '" data-action="analysis" data-mode="chart" aria-label="图表">▥</button><button class="' + (ui.analysis === 'table' ? 'active' : '') + '" data-action="analysis" data-mode="table" aria-label="表格">▦</button><button class="' + (ui.analysis === 'calendar' ? 'active' : '') + '" data-action="analysis" data-mode="calendar" aria-label="日历">▣</button><select data-field="range" aria-label="分析时间范围"><option value="7"' + (ui.range === 7 ? ' selected' : '') + '>7 天</option><option value="30"' + (ui.range === 30 ? ' selected' : '') + '>30 天</option></select></div>';
+    const history = M.history(state), since = M.plusDays(M.dayKey(new Date()), 1 - ui.range);
+    const period = history.filter(item => item.day >= since);
+    const taken = period.filter(item => item.status === 'taken').length, skipped = period.filter(item => item.status === 'skipped').length;
+    if (ui.analysis === 'chart') {
+      const all = M.stats(state, M.dayKey(new Date()), ui.range); const max = Math.max(1, ...all.map(item => item.taken + item.skipped));
+      const bars = (ui.range === 7 ? all : all.filter((_, i) => i % 3 === 0)).map(item => '<div class="bar-col"><span class="bar-stack"><span class="bar-skipped" style="height:' + item.skipped / max * 100 + '%"></span><span class="bar-taken" style="height:' + item.taken / max * 100 + '%"></span></span><small>' + esc(item.label) + '</small></div>').join('');
+      return options + '<div class="chart-card"><div class="chart-bars">' + bars + '</div><div class="legend"><span>● 已服用</span><span>● 已跳过</span></div></div><div class="summaries"><div class="summary"><strong>最近 ' + ui.range + ' 天</strong><b>' + (taken + skipped ? Math.round(taken * 100 / (taken + skipped)) : 0) + '%</b><span>已服用 ' + taken + ' · 已跳过 ' + skipped + '</span></div><div class="summary"><strong>总记录</strong><b>' + history.length + '</b><span>每条来自用药事件</span></div></div>';
+    }
+    if (ui.analysis === 'table') return options + '<div class="table-card"><div class="table-row head"><span>处理时间</span><span>药品</span><span>状态</span></div>' + (history.map(item => '<div class="table-row"><span>' + esc(timeText(item.processedAt)) + '</span><span>' + esc(item.name) + '</span><span>' + STATUS[item.status][0] + '</span></div>').join('') || '<div class="empty">尚无记录</div>') + '</div>';
+    const date = M.dateOf(ui.day), first = new Date(date.getFullYear(), date.getMonth(), 1), firstDay = M.dayKey(first), start = M.plusDays(firstDay, -first.getDay());
+    const labels = WEEK.map(label => '<div class="calendar-cell day-label">' + label + '</div>').join('');
+    const cells = Array.from({ length: 42 }, (_, i) => { const day = M.plusDays(start, i), d = M.dateOf(day), classes = ['calendar-cell', d.getMonth() !== date.getMonth() ? 'outside' : '', day === ui.day ? 'selected' : '', M.scheduled(state, day).length ? 'has-event' : ''].join(' '); return '<button class="' + classes + '" data-action="calendar-day" data-day="' + day + '">' + d.getDate() + '</button>'; }).join('');
+    const daily = displayRows(ui.day).map(row => '<div>' + STATUS[row.status][1] + '　' + esc(row.time + '　' + row.name) + ' · ' + STATUS[row.status][0] + '</div>').join('') || '当天没有提醒事件';
+    return options + '<div class="calendar-card"><div class="calendar-head"><button data-action="month-prev">‹</button><span>' + esc(title(ui.day)) + '⌄</span><button data-action="month-next">›</button></div><div class="calendar-grid">' + labels + cells + '</div><div class="calendar-list"><strong>' + esc(ui.day) + '</strong>' + daily + '</div></div>';
   }
-  function render() { renderToday(); renderMedicines(); renderHistory(); }
-  function toast(message) { var el = document.getElementById('toast'); el.textContent = message; el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(function () { el.classList.remove('show'); }, 3300); }
-  function view(name) { ['today', 'medicines', 'history'].forEach(function (item) { document.getElementById('view-' + item).classList.toggle('hidden', item !== name); }); document.querySelectorAll('[data-view]').forEach(function (b) { b.classList.toggle('active', b.dataset.view === name); }); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-  function confirmBox(title, message, actionText, action) { document.getElementById('confirm-title').textContent = title; document.getElementById('confirm-message').textContent = message; document.getElementById('accept-confirm').textContent = actionText; confirmAction = action; document.getElementById('confirm-dialog').showModal(); }
-  function openNotification(row) { notificationKey = row.key; document.getElementById('notification-message').textContent = row.med.name + ' · ' + row.rule.amount + ' ' + row.med.unit + ' · 计划 ' + row.rule.time + '。请根据真实情况选择。'; document.getElementById('notification-dialog').showModal(); }
-  function openAdd() { document.getElementById('add-form').reset(); document.getElementById('medicine-dose').value = 1; document.getElementById('medicine-stock').value = 30; document.getElementById('medicine-unit').value = '片'; document.getElementById('medicine-time').value = '08:00'; document.getElementById('form-error').textContent = ''; document.getElementById('add-dialog').showModal(); }
-  function openReminder(m, rule) { editingMedicineId = m.id; editingReminderId = rule ? rule.id : null; document.getElementById('reminder-dialog-title').textContent = rule ? '编辑提醒' : '添加提醒'; document.getElementById('reminder-medicine-name').textContent = m.name + ' · 库存单位：' + m.unit; document.getElementById('reminder-time').value = rule ? rule.time : '08:00'; document.getElementById('reminder-dose').value = rule ? rule.amount : 1; document.querySelectorAll('#reminder-days input').forEach(function (input) { input.checked = rule ? rule.days.includes(+input.value) : true; }); document.getElementById('reminder-error').textContent = ''; document.getElementById('reminder-dialog').showModal(); }
-  document.querySelectorAll('[data-view]').forEach(function (b) { b.addEventListener('click', function () { view(b.dataset.view); }); });
-  document.querySelectorAll('[data-filter]').forEach(function (b) { b.addEventListener('click', function () { filter = b.dataset.filter; renderToday(); }); });
-  document.getElementById('prev-day').onclick = function () { var d = dateOf(selectedDay); d.setDate(d.getDate() - 1); selectedDay = dayKey(d); renderToday(); };
-  document.getElementById('next-day').onclick = function () { var d = dateOf(selectedDay); d.setDate(d.getDate() + 1); selectedDay = dayKey(d); renderToday(); };
-  document.getElementById('jump-today').onclick = function () { selectedDay = dayKey(new Date()); renderToday(); };
-  document.getElementById('open-add-today').onclick = openAdd; document.getElementById('open-add-medicines').onclick = openAdd;
-  [['close-add', 'add-dialog'], ['cancel-add', 'add-dialog'], ['close-reminder', 'reminder-dialog'], ['cancel-reminder', 'reminder-dialog'], ['close-stock', 'stock-dialog'], ['cancel-stock', 'stock-dialog'], ['close-notification', 'notification-dialog'], ['close-confirm', 'confirm-dialog'], ['cancel-confirm', 'confirm-dialog']].forEach(function (pair) { document.getElementById(pair[0]).onclick = function () { document.getElementById(pair[1]).close(); }; });
-  document.getElementById('accept-confirm').onclick = function () { document.getElementById('confirm-dialog').close(); if (confirmAction) confirmAction(); confirmAction = null; };
-  document.body.addEventListener('click', function (click) {
-    var b = click.target.closest('[data-action]'); if (!b) return;
-    var action = b.dataset.action, m, rule, row;
-    if (action === 'review-event') { selectedDay = b.dataset.key.slice(0, 10); filter = 'all'; renderToday(); view('today'); return; }
-    if (action === 'add-reminder' || action === 'edit-reminder' || action === 'toggle-reminder') {
-      m = med(b.dataset.med || b.dataset.id); rule = m.reminders.find(function (r) { return r.id === b.dataset.id; });
-      if (action === 'toggle-reminder') { rule.active = !rule.active; save(); render(); toast(rule.active ? '提醒已启用。' : '提醒已停用，已有事件保留。'); }
-      else openReminder(m, action === 'edit-reminder' ? rule : null); return;
-    }
-    if (action === 'stock') { m = med(b.dataset.id); stockMedicineId = m.id; document.getElementById('stock-medicine-name').textContent = m.name + ' · ' + m.unit; document.getElementById('stock-value').value = m.stock; document.getElementById('stock-error').textContent = ''; document.getElementById('stock-dialog').showModal(); return; }
-    if (action === 'delete-medicine') { m = med(b.dataset.id); confirmBox('删除药品？', '将移除“' + m.name + '”及提醒规则，已完成的记录保留。', '删除药品', function () { state.medicines = state.medicines.filter(function (item) { return item.id !== m.id; }); save(); render(); toast('药品已删除。'); }); return; }
-    row = rowFor(b.dataset.key); if (!row) return;
-    if (action === 'raise') { raise(row); render(); openNotification(rowFor(row.key)); }
-    else if (action === 'snooze') snooze(row);
-    else if (action === 'taken' || action === 'skip') {
-      if (action === 'taken' && row.med.stock < row.rule.amount && row.status !== 'taken') confirmBox('库存低于本次用量', '请核对真实药品。若确实已服用，仍可记录；库存不会低于 0。', '仍记为已服用', function () { outcome(rowFor(row.key), 'taken'); });
-      else outcome(row, action === 'taken' ? 'taken' : 'skipped');
-    }
+  function renderEditor() {
+    const m = ui.form;
+    const rules = m.reminders.map(rule => '<button class="reminder-card" data-action="open-rule" data-id="' + esc(rule.id) + '"><strong>▣　' + esc(rule.time) + '</strong><small>' + esc(rule.amount + ' ' + m.unit) + ' · ' + esc(reminderText(rule)) + '</small><span class="advanced-pill">⚙　高级设置　›</span></button>').join('');
+    return '<div class="editor-card"><div class="editor-head"><div class="swatch" style="background:' + esc(m.color) + '">' + esc(m.icon) + '</div><label class="field" style="flex:1;margin:0">药品名称<input data-field="name" value="' + esc(m.name) + '" placeholder="填写药品名称" maxlength="50"></label></div><div class="editor-tools"><span>⚙</span><span>▤</span><span>◇</span><span>□</span><span>▦</span></div></div><h2 class="subhead">药品信息</h2><div class="editor-card"><label class="field">备注<input data-field="notes" value="' + esc(m.notes) + '" placeholder="按已有方案填写"></label><label class="field">标签（逗号分隔）<input data-field="tags" value="' + esc(m.tags.join(',')) + '"></label><div class="field-row"><label class="field">库存<input type="number" min="0" step="0.1" data-field="stock" value="' + esc(m.stock) + '"></label><label class="field">单位<input data-field="unit" value="' + esc(m.unit) + '"></label></div><label class="field">低库存提醒阈值<input type="number" min="0" step="0.1" data-field="threshold" value="' + esc(m.threshold) + '"></label></div><h2 class="subhead">提醒</h2>' + rules + '<button class="add-rule" data-action="add-rule">⊕　添加提醒</button><div class="editor-actions"><button data-action="save-med">保存药品</button>' + (ui.editingId ? '<button class="danger" data-action="delete-med">删除药品</button>' : '') + '</div>';
+  }
+  function renderReminder() {
+    const r = ui.rule;
+    const weekdays = [1, 2, 3, 4, 5, 6, 0].map(day => '<button type="button" class="' + (r.days.includes(day) ? 'selected' : '') + '" data-action="weekday" data-day="' + day + '">' + WEEK[day] + '</button>').join('');
+    return '<div class="editor-card"><label class="field">提醒类型<select data-field="type"><option value="weekly"' + (r.type === 'weekly' ? ' selected' : '') + '>每周固定时间</option><option value="cycle"' + (r.type === 'cycle' ? ' selected' : '') + '>周期疗程</option></select></label><label class="field">提醒时间<input type="time" data-field="time" value="' + esc(r.time) + '"></label><label class="field">单次用量（' + esc(ui.form.unit) + '）<input type="number" min="0.1" step="0.1" data-field="amount" value="' + esc(r.amount) + '"></label>' + (r.type === 'weekly' ? '<div class="field">每周提醒日</div><div class="weekday-choices">' + weekdays + '</div>' : '<label class="field">周期起始日<input type="date" data-field="cycleStart" value="' + esc(r.cycleStart) + '"></label><div class="field-row"><label class="field">连续服用天数<input type="number" min="1" data-field="activeDays" value="' + esc(r.activeDays) + '"></label><label class="field">暂停天数<input type="number" min="1" data-field="pauseDays" value="' + esc(r.pauseDays) + '"></label></div>') + '<label class="check-row"><input type="checkbox" data-field="active"' + (r.active ? ' checked' : '') + '>启用提醒</label></div><p class="notice">演示只在小程序打开期间计算到点状态。后台提醒需要另行接入微信订阅消息服务。</p><div class="editor-actions"><button data-action="save-rule">保存提醒</button>' + (ui.reminderId ? '<button class="danger" data-action="delete-rule">删除提醒</button>' : '') + '</div>';
+  }
+  function renderManual() { return '<div class="editor-card"><label class="field">药品<select data-field="manualId">' + state.medicines.map(m => '<option value="' + esc(m.id) + '"' + (ui.manualId === m.id ? ' selected' : '') + '>' + esc(m.name) + '</option>').join('') + '</select></label><label class="field">实际服用数量<input type="number" min="0.1" step="0.1" data-field="manualAmount" value="' + esc(ui.manualAmount) + '"></label><p class="notice">补记会创建独立的已服用事件，并扣减相应库存。</p></div><div class="editor-actions"><button data-action="save-manual">记录这次服药</button></div>'; }
+  function renderSheet() {
+    if (!ui.sheetKey) return '';
+    const row = M.findRow(state, ui.sheetKey), event = state.events[ui.sheetKey];
+    if (!row && !event) return '';
+    const status = row ? row.status : event.status;
+    const actions = status === 'taken' ? [['skipped', '改为已跳过']] : status === 'skipped' ? [['taken', '改为已服用']] : status === 'raised' ? [['taken', '已服用'], ['skipped', '跳过本次'], ['snooze', '延后 10 分钟']] : [['taken', '已服用'], ['skipped', '跳过本次'], ['raise', '模拟触发提醒']];
+    return '<div class="overlay" data-action="close-sheet"><div class="sheet" role="dialog" aria-label="处理提醒"><h2>' + esc(row ? row.medicine.name : event.name) + ' · ' + esc(row ? row.reminder.time : event.time) + '</h2>' + actions.map(item => '<button data-action="event-op" data-op="' + item[0] + '">' + item[1] + '</button>').join('') + '<button data-action="close-sheet">取消</button></div></div>';
+  }
+  function render() {
+    const body = ui.screen === 'main' ? (ui.tab === 'overview' ? renderOverview() : ui.tab === 'medicines' ? renderMedicines() : renderAnalysis()) : ui.screen === 'editor' ? renderEditor() : ui.screen === 'reminder' ? renderReminder() : renderManual();
+    const tabbar = ui.screen === 'main' ? '<nav class="tabbar" aria-label="主导航">' + [['overview', '▣', '主页'], ['medicines', '◕', '药品'], ['analysis', '▥', '分析']].map(item => '<button class="' + (ui.tab === item[0] ? 'current' : '') + '" data-action="tab" data-tab="' + item[0] + '"><b>' + item[1] + '</b><span>' + item[2] + '</span></button>').join('') + '</nav>' : '';
+    const fab = ui.screen === 'main' && ui.tab !== 'analysis' ? '<button class="fab" data-action="' + (ui.tab === 'overview' ? 'manual' : 'add-med') + '">' + (ui.tab === 'overview' ? '▰　补记服药' : '⊕　添加药品') + '</button>' : '';
+    app.innerHTML = renderTop() + '<main class="scroll">' + body + '</main>' + tabbar + fab + (ui.menu ? '<div class="menu-pop"><button data-action="simulate">模拟触发下一条提醒</button><button data-action="reset">重置虚构数据</button><button data-action="about">关于与限制</button></div>' : '') + renderSheet();
+  }
+  function openMedicine(id) {
+    const medicine = med(id);
+    ui.editingId = medicine ? medicine.id : '';
+    ui.form = medicine ? clone(medicine) : { id: M.id('m'), name: '', color: '#5b6e9a', icon: '▣', stock: 0, unit: '片', threshold: 5, notes: '', tags: [], reminders: [] };
+    ui.screen = 'editor'; render();
+  }
+  function saveMedicine() {
+    const form = ui.form, stock = Number(form.stock), threshold = Number(form.threshold);
+    if (!form.name.trim() || !form.unit.trim() || !Number.isFinite(stock) || stock < 0 || !Number.isFinite(threshold) || threshold < 0) return alert('请填写有效的药品名称、单位和库存。');
+    form.name = form.name.trim(); form.unit = form.unit.trim(); form.stock = stock; form.threshold = threshold;
+    const index = state.medicines.findIndex(item => item.id === form.id);
+    if (index < 0) { form.reminders = [{ id: M.id('r'), type: 'weekly', time: '08:00', amount: 1, days: M.ALL_DAYS.slice(), active: true }]; state.medicines.push(clone(form)); }
+    else state.medicines[index] = clone(form);
+    save(); ui.screen = 'main'; ui.tab = 'medicines'; render();
+  }
+  function openRule(id) {
+    const medicine = med(ui.editingId), rule = medicine.reminders.find(item => item.id === id);
+    ui.reminderId = rule ? rule.id : '';
+    ui.rule = rule ? clone(rule) : { id: M.id('r'), type: 'weekly', time: '08:00', amount: 1, days: M.ALL_DAYS.slice(), active: true, cycleStart: M.dayKey(new Date()), activeDays: 21, pauseDays: 7 };
+    ui.rule.cycleStart ||= M.dayKey(new Date());
+    ui.rule.activeDays ??= 21;
+    ui.rule.pauseDays ??= 7;
+    ui.rule.days ||= M.ALL_DAYS.slice();
+    ui.screen = 'reminder'; render();
+  }
+  function saveRule() {
+    const r = ui.rule, amount = Number(r.amount), activeDays = Number(r.activeDays), pauseDays = Number(r.pauseDays);
+    if (!r.time || !Number.isFinite(amount) || amount <= 0 || (r.type === 'weekly' && !r.days.length) || (r.type === 'cycle' && (!r.cycleStart || !Number.isInteger(activeDays) || activeDays < 1 || !Number.isInteger(pauseDays) || pauseDays < 1))) return alert('请检查时间、用量和重复规则。');
+    r.amount = amount; r.activeDays = activeDays; r.pauseDays = pauseDays;
+    const medicine = med(ui.editingId), index = medicine.reminders.findIndex(item => item.id === r.id);
+    if (index < 0) medicine.reminders.push(clone(r)); else medicine.reminders[index] = clone(r);
+    save(); openMedicine(medicine.id);
+  }
+  function simulate() {
+    ui.menu = false;
+    const row = M.scheduled(state, M.dayKey(new Date())).find(item => ['scheduled', 'snoozed'].includes(item.status));
+    if (!row) { render(); return alert('今天没有待触发的提醒。'); }
+    M.raise(state, row.key); save(); ui.tab = 'overview'; ui.day = M.dayKey(new Date()); ui.screen = 'main'; ui.sheetKey = row.key; render();
+  }
+  app.addEventListener('click', event => {
+    const control = event.target.closest('[data-action]'); if (!control) return;
+    const action = control.dataset.action;
+    if (action === 'close-sheet' && event.target.closest('.sheet') && event.target !== control) return;
+    if (action === 'tab') { ui.tab = control.dataset.tab; ui.screen = 'main'; }
+    else if (action === 'day' || action === 'calendar-day') ui.day = control.dataset.day;
+    else if (action === 'week-prev' || action === 'week-next') ui.day = M.plusDays(ui.day, action === 'week-prev' ? -7 : 7);
+    else if (action === 'filter') ui.filter = control.dataset.filter;
+    else if (action === 'analysis') ui.analysis = control.dataset.mode;
+    else if (action === 'month-prev' || action === 'month-next') { const d = M.dateOf(ui.day); d.setMonth(d.getMonth() + (action === 'month-prev' ? -1 : 1), 1); ui.day = M.dayKey(d); }
+    else if (action === 'menu') ui.menu = !ui.menu;
+    else if (action === 'simulate') return simulate();
+    else if (action === 'reset') { ui.menu = false; if (confirm('恢复为虚构示例？当前预览数据会被重置。')) { state = M.seed(); save(); ui.day = M.dayKey(new Date()); ui.screen = 'main'; ui.tab = 'overview'; } }
+    else if (action === 'about') { ui.menu = false; alert('本项目参考开源 Android 应用 MedTimer 的界面与事件流程。数据仅保存在本机；网页预览和小程序原型均没有后台推送或医疗建议。'); }
+    else if (action === 'event') { if (control.dataset.key.includes(':manual-')) return alert('这是一条补记记录。'); ui.sheetKey = control.dataset.key; }
+    else if (action === 'close-sheet') ui.sheetKey = '';
+    else if (action === 'event-op') { const key = ui.sheetKey, op = control.dataset.op; if (op === 'raise') M.raise(state, key); else if (op === 'snooze') M.snooze(state, key, 10); else M.outcome(state, key, op); ui.sheetKey = ''; save(); }
+    else if (action === 'open-med') { if (med(control.dataset.id)) return openMedicine(control.dataset.id); }
+    else if (action === 'add-med') return openMedicine(null);
+    else if (action === 'save-med') return saveMedicine();
+    else if (action === 'delete-med') { if (confirm('删除药品及提醒规则？已完成的历史事件会保留。')) { state.medicines = state.medicines.filter(item => item.id !== ui.editingId); save(); ui.screen = 'main'; ui.tab = 'medicines'; } }
+    else if (action === 'add-rule') { if (!ui.editingId) return alert('请先保存药品，再添加提醒。'); return openRule(null); }
+    else if (action === 'open-rule') return openRule(control.dataset.id);
+    else if (action === 'weekday') { const day = Number(control.dataset.day); ui.rule.days = ui.rule.days.includes(day) ? ui.rule.days.filter(item => item !== day) : ui.rule.days.concat(day); }
+    else if (action === 'save-rule') return saveRule();
+    else if (action === 'delete-rule') { if (confirm('删除这条提醒？')) { const medicine = med(ui.editingId); medicine.reminders = medicine.reminders.filter(item => item.id !== ui.reminderId); save(); return openMedicine(medicine.id); } }
+    else if (action === 'manual') { ui.manualId = state.medicines[0]?.id || ''; ui.manualAmount = 1; ui.screen = 'manual'; }
+    else if (action === 'save-manual') { if (!M.manualDose(state, ui.manualId, Number(ui.manualAmount))) return alert('请选择药品并填写有效用量。'); save(); ui.screen = 'main'; ui.tab = 'overview'; ui.day = M.dayKey(new Date()); }
+    else if (action === 'back') { if (ui.screen === 'reminder') return openMedicine(ui.editingId); ui.screen = 'main'; }
+    render();
   });
-  document.querySelectorAll('[data-notification-action]').forEach(function (b) { b.onclick = function () { document.getElementById('notification-dialog').close(); var row = rowFor(notificationKey); if (!row) return; if (b.dataset.notificationAction === 'snooze') snooze(row); else outcome(row, b.dataset.notificationAction === 'taken' ? 'taken' : 'skipped'); }; });
-  document.getElementById('add-form').onsubmit = function (event) {
-    event.preventDefault(); var name = document.getElementById('medicine-name').value.trim(), amount = +document.getElementById('medicine-dose').value, time = document.getElementById('medicine-time').value, stock = +document.getElementById('medicine-stock').value, unit = document.getElementById('medicine-unit').value.trim(), error = document.getElementById('form-error');
-    if (!name || !time || !unit || !Number.isFinite(amount) || amount <= 0 || amount > 9999 || !Number.isFinite(stock) || stock < 0 || stock > 9999) { error.textContent = '请填写有效的药品、时间、单次用量和库存。'; return; }
-    if (state.medicines.some(function (item) { return item.name === name; })) { error.textContent = '药品已存在，请在其卡片中添加另一条提醒。'; return; }
-    state.medicines.push({ id: id('m'), name: name, stock: stock, unit: unit, note: document.getElementById('medicine-note').value.trim(), tone: tones[state.medicines.length % 4], reminders: [{ id: id('r'), time: time, amount: amount, days: daysAll.slice(), active: true }] });
-    save(); render(); document.getElementById('add-dialog').close(); view('medicines'); toast('药品及第一条每日提醒已添加。');
-  };
-  document.getElementById('reminder-form').onsubmit = function (event) {
-    event.preventDefault(); var m = med(editingMedicineId), time = document.getElementById('reminder-time').value, amount = +document.getElementById('reminder-dose').value, days = Array.from(document.querySelectorAll('#reminder-days input:checked')).map(function (input) { return +input.value; }), error = document.getElementById('reminder-error');
-    if (!time || !Number.isFinite(amount) || amount <= 0 || amount > 9999 || !days.length) { error.textContent = '请设置时间、有效用量和至少一个星期。'; return; }
-    if (m.reminders.some(function (r) { return r.id !== editingReminderId && r.time === time && r.days.some(function (d) { return days.includes(d); }); })) { error.textContent = '同一药品在所选星期的这个时间已有提醒。'; return; }
-    var rule = m.reminders.find(function (r) { return r.id === editingReminderId; });
-    if (rule) { rule.time = time; rule.amount = amount; rule.days = days; } else m.reminders.push({ id: id('r'), time: time, amount: amount, days: days, active: true });
-    save(); render(); document.getElementById('reminder-dialog').close(); toast('提醒规则已保存。');
-  };
-  document.getElementById('stock-form').onsubmit = function (event) { event.preventDefault(); var value = +document.getElementById('stock-value').value; if (!Number.isFinite(value) || value < 0 || value > 9999) { document.getElementById('stock-error').textContent = '请输入有效库存。'; return; } var m = med(stockMedicineId); m.stock = value; state.audit.push({ at: Date.now(), action: '修正库存', name: m.name, value: value }); save(); render(); document.getElementById('stock-dialog').close(); toast('库存已修正。'); };
-  document.getElementById('simulate-reminder').onclick = function () { var all = rows(dayKey(new Date())), next = all.find(function (r) { return r.status === 'scheduled' || r.status === 'snoozed'; }) || all.find(function (r) { return r.status === 'raised'; }); if (!next) { toast('今天没有可触发的提醒。'); return; } if (next.status !== 'raised') raise(next); render(); openNotification(rowFor(next.key)); };
-  document.getElementById('reset-demo').onclick = function () { confirmBox('重置演示数据？', '药品、提醒规则与记录会恢复为虚构示例。', '重置数据', function () { state = seed(); selectedDay = dayKey(new Date()); filter = 'all'; save(); reconcile(); render(); view('today'); toast('演示数据已重置。'); }); };
-  document.getElementById('export-history').onclick = function () { var url = URL.createObjectURL(new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), medicines: state.medicines, events: state.events, audit: state.audit }, null, 2)], { type: 'application/json' })); var link = document.createElement('a'); link.href = url; link.download = '安心服药-演示数据.json'; link.click(); setTimeout(function () { URL.revokeObjectURL(url); }, 1000); toast('演示数据已导出。'); };
-  reconcile(); render(); setInterval(reconcile, 15000);
+  app.addEventListener('input', event => {
+    const field = event.target.dataset.field; if (!field) return;
+    const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
+    if (ui.screen === 'editor') { if (field === 'tags') ui.form.tags = value.split(/[,，]/).map(item => item.trim()).filter(Boolean); else ui.form[field] = value; }
+    else if (ui.screen === 'reminder') ui.rule[field] = value;
+    else if (ui.screen === 'manual') ui[field] = value;
+    else if (field === 'range') { ui.range = Number(value); render(); }
+  });
+  app.addEventListener('change', event => { if (event.target.dataset.field === 'range') { ui.range = Number(event.target.value); render(); } else if (ui.screen === 'reminder' && event.target.dataset.field === 'type') { ui.rule.type = event.target.value; render(); } });
+  M.reconcile(state, new Date()); save(); render();
+  setInterval(() => { if (M.reconcile(state, new Date())) { save(); render(); } }, 15000);
+  document.getElementById('clock').textContent = new Intl.DateTimeFormat('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
 }());

@@ -1,0 +1,199 @@
+const model = require('../../lib/model');
+const app = getApp();
+const STATUS = { scheduled: ['待触发', '▣'], raised: ['待处理', '♧'], snoozed: ['已延后', '◷'], taken: ['已服用', '✓'], skipped: ['已跳过', '×'] };
+const WEEK = ['日', '一', '二', '三', '四', '五', '六'];
+function clone(value) { return JSON.parse(JSON.stringify(value)); }
+function toast(title) { wx.showToast({ title, icon: 'none' }); }
+function dateTitle(day) { const d = model.dateOf(day); return (d.getMonth() + 1) + '月 ' + d.getFullYear(); }
+function timeLabel(timestamp) { const d = new Date(timestamp); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
+
+Page({
+  data: {
+    statusBarHeight: 24, tab: 'overview', screen: 'main', selectedDay: '', monthTitle: '', weekDates: [],
+    filters: [{ value: 'all', label: '全部' }, { value: 'scheduled', label: '待触发' }, { value: 'raised', label: '待处理' }, { value: 'taken', label: '已服用' }, { value: 'skipped', label: '已跳过' }],
+    filter: 'all', displayRows: [], medicineCards: [], analysisMode: 'chart', rangeOptions: ['7 天', '30 天'], rangeIndex: 0,
+    chartBars: [], takenCount: 0, skippedCount: 0, takenRate: 0, totalEvents: 0, rangeDays: 7,
+    historyRows: [], weekdayLabels: ['日', '一', '二', '三', '四', '五', '六'], calendarTitle: '', calendarCells: [], calendarEventRows: [],
+    medicineNames: [], manualMedicineIndex: 0, manualAmount: '1', editingId: '', editingReminderId: '',
+    formMedicine: {}, editorReminders: [], reminderTypes: ['每周固定时间', '周期疗程'], reminderTypeIndex: 0,
+    formReminder: {}, reminderWeekdays: []
+  },
+  onLoad() {
+    const info = wx.getSystemInfoSync();
+    this.setData({ statusBarHeight: info.statusBarHeight || 24, selectedDay: model.dayKey(new Date()) });
+  },
+  onShow() { this.refresh(); this.timer = setInterval(() => { if (model.reconcile(app.globalData.state, new Date())) { app.persist(); this.refresh(); } }, 15000); },
+  onHide() { if (this.timer) clearInterval(this.timer); },
+  onUnload() { if (this.timer) clearInterval(this.timer); },
+  refresh() {
+    const state = app.globalData.state;
+    if (!state) return;
+    model.reconcile(state, new Date()); app.persist();
+    const day = this.data.selectedDay || model.dayKey(new Date());
+    const weekDates = model.week(day).map(value => ({ day: value, label: WEEK[model.dateOf(value).getDay()], number: +value.slice(8), selected: value === day }));
+    const all = model.scheduled(state, day).map(row => this.formatRow(row));
+    Object.values(state.events).filter(event => event.manual && event.day === day).forEach(event => {
+      const medicine = state.medicines.find(item => item.id === event.medicineId);
+      all.push({ key: event.key, medicineId: event.medicineId, name: event.name, amount: event.amount, unit: event.unit, time: event.time,
+        color: medicine ? medicine.color : '#8a91aa', medicineIcon: medicine ? medicine.icon : '▣',
+        status: event.status, statusText: STATUS[event.status][0] + ' · 补记', icon: STATUS[event.status][1], snoozeText: '' });
+    });
+    all.sort((a, b) => a.time.localeCompare(b.time));
+    const selected = all.filter(row => this.data.filter === 'all' || row.status === this.data.filter || (this.data.filter === 'raised' && row.status === 'snoozed'));
+    const medicineCards = state.medicines.map(medicine => ({ ...medicine, low: medicine.stock <= medicine.threshold,
+      reminderCount: medicine.reminders.length, times: medicine.reminders.filter(rule => rule.active).map(rule => rule.time).join('、') || '已停用' }));
+    const items = model.history(state);
+    const rangeDays = this.data.rangeIndex ? 30 : 7;
+    const rangeItems = items.filter(item => item.day >= model.plusDays(model.dayKey(new Date()), 1 - rangeDays));
+    const takenCount = rangeItems.filter(item => item.status === 'taken').length;
+    const skippedCount = rangeItems.filter(item => item.status === 'skipped').length;
+    const bars = model.stats(state, model.dayKey(new Date()), rangeDays);
+    const max = Math.max(1, ...bars.map(item => item.taken + item.skipped));
+    const chartBars = (rangeDays === 7 ? bars : bars.filter((_, index) => index % 3 === 0)).map(item => ({ ...item,
+      takenHeight: Math.round(item.taken / max * 100), skippedHeight: Math.round(item.skipped / max * 100) }));
+    const historyRows = items.map(item => ({ key: item.key, timeLabel: timeLabel(item.processedAt), name: item.name,
+      statusText: STATUS[item.status][0], amount: item.amount, unit: item.unit }));
+    const calendar = this.buildCalendar(day, state);
+    this.setData({ selectedDay: day, monthTitle: dateTitle(day), weekDates, displayRows: selected, medicineCards,
+      chartBars, rangeDays, takenCount, skippedCount, takenRate: takenCount + skippedCount ? Math.round(takenCount * 100 / (takenCount + skippedCount)) : 0,
+      totalEvents: items.length, historyRows, calendarTitle: calendar.title, calendarCells: calendar.cells,
+      calendarEventRows: all, medicineNames: state.medicines.map(item => item.name) });
+  },
+  formatRow(row) {
+    return { key: row.key, medicineId: row.medicine.id, name: row.medicine.name, color: row.medicine.color,
+      medicineIcon: row.medicine.icon, amount: row.reminder.amount, unit: row.medicine.unit,
+      time: row.reminder.time, status: row.status, statusText: STATUS[row.status][0], icon: STATUS[row.status][1],
+      snoozeText: row.status === 'snoozed' ? ' → ' + timeLabel(row.dueAt).split(' ')[1] : '' };
+  },
+  buildCalendar(day, state) {
+    const date = model.dateOf(day), first = new Date(date.getFullYear(), date.getMonth(), 1);
+    const firstDay = model.dayKey(first), start = model.plusDays(firstDay, -first.getDay());
+    const cells = Array.from({ length: 42 }, (_, index) => {
+      const value = model.plusDays(start, index); const dateValue = model.dateOf(value);
+      return { day: value, number: dateValue.getDate(), current: dateValue.getMonth() === date.getMonth(), selected: value === day,
+        hasEvent: model.scheduled(state, value).length > 0 };
+    });
+    return { title: dateTitle(day), cells };
+  },
+  switchTab(event) { this.setData({ tab: event.currentTarget.dataset.tab, screen: 'main' }); this.refresh(); },
+  selectDay(event) { this.setData({ selectedDay: event.currentTarget.dataset.day }); this.refresh(); },
+  previousWeek() { this.setData({ selectedDay: model.plusDays(this.data.selectedDay, -7) }); this.refresh(); },
+  nextWeek() { this.setData({ selectedDay: model.plusDays(this.data.selectedDay, 7) }); this.refresh(); },
+  selectFilter(event) { this.setData({ filter: event.currentTarget.dataset.filter }); this.refresh(); },
+  tapStatus(event) {
+    const key = event.currentTarget.dataset.key, state = app.globalData.state;
+    if (key.includes(':manual-')) { toast('补记事件已保存'); return; }
+    const row = model.findRow(state, key); if (!row) return;
+    const actions = row.status === 'taken' ? ['改为已跳过'] : row.status === 'skipped' ? ['改为已服用'] :
+      row.status === 'raised' ? ['已服用', '跳过本次', '延后 10 分钟'] : ['已服用', '跳过本次', '模拟触发提醒'];
+    wx.showActionSheet({ itemList: actions, success: result => {
+      const action = actions[result.tapIndex];
+      if (action === '改为已跳过' || action === '跳过本次') model.outcome(state, key, 'skipped');
+      else if (action === '改为已服用' || action === '已服用') model.outcome(state, key, 'taken');
+      else if (action === '延后 10 分钟') model.snooze(state, key, 10);
+      else model.raise(state, key);
+      app.persist(); this.refresh();
+    } });
+  },
+  openMenu() {
+    const actions = ['模拟触发下一条提醒', '重置虚构演示数据', '关于本演示'];
+    wx.showActionSheet({ itemList: actions, success: result => {
+      if (result.tapIndex === 0) this.simulateNext();
+      if (result.tapIndex === 1) wx.showModal({ title: '重置演示数据？', content: '药品与记录将恢复为虚构示例。', success: response => {
+        if (response.confirm) { app.globalData.state = model.seed(); app.persist(); this.refresh(); }
+      } });
+      if (result.tapIndex === 2) wx.showModal({ title: 'MedTimer 小程序演示', content: '界面与核心提醒事件流程参考开源 Android 项目 MedTimer。数据只保存在本机；没有后台推送或医疗建议。', showCancel: false });
+    } });
+  },
+  simulateNext() {
+    const state = app.globalData.state;
+    const row = model.scheduled(state, model.dayKey(new Date())).find(item => ['scheduled', 'snoozed'].includes(item.status));
+    if (!row) { toast('今天没有待触发提醒'); return; }
+    model.raise(state, row.key); app.persist(); this.refresh();
+    wx.showModal({ title: '用药提醒', content: row.medicine.name + ' · ' + row.reminder.amount + ' ' + row.medicine.unit + '\n点状态图标可选择服用、跳过或延后。', showCancel: false });
+  },
+  openMedicine(event) { this.editMedicine(event.currentTarget.dataset.id); },
+  addMedicine() { this.editMedicine(null); },
+  editMedicine(medicineId) {
+    const medicine = app.globalData.state.medicines.find(item => item.id === medicineId);
+    const form = medicine ? clone(medicine) : { id: model.id('m'), name: '', color: '#5b6e9a', icon: '▣', stock: 0, unit: '片', threshold: 5, notes: '', tags: [], reminders: [] };
+    form.tagText = form.tags.join(',');
+    this.setData({ screen: 'editor', editingId: medicine ? medicine.id : '', formMedicine: form,
+      editorReminders: this.formatReminders(form.reminders) });
+  },
+  formatReminders(reminders) { return reminders.map(rule => ({ ...rule, summary: rule.type === 'cycle' ? rule.activeDays + ' 天服用 / ' + rule.pauseDays + ' 天暂停' : (rule.days.length === 7 ? '每天' : '每周 ' + rule.days.map(day => WEEK[day]).join('、')) + (rule.active ? '' : ' · 已停用') })); },
+  medicineInput(event) { const form = { ...this.data.formMedicine }; form[event.currentTarget.dataset.field] = event.detail.value; this.setData({ formMedicine: form }); },
+  focusEditorField() { wx.showToast({ title: '可在下方修改库存', icon: 'none' }); },
+  saveMedicine() {
+    const form = this.data.formMedicine, state = app.globalData.state;
+    const stock = Number(form.stock), threshold = Number(form.threshold);
+    if (!form.name.trim() || !form.unit.trim() || !Number.isFinite(stock) || stock < 0 || !Number.isFinite(threshold) || threshold < 0) { toast('请填写有效的药品名称与库存'); return; }
+    const value = { ...form, name: form.name.trim(), unit: form.unit.trim(), stock, threshold,
+      tags: form.tagText.split(/[,，]/).map(tag => tag.trim()).filter(Boolean) };
+    delete value.tagText;
+    const index = state.medicines.findIndex(item => item.id === value.id);
+    if (index < 0) { value.reminders = [{ id: model.id('r'), type: 'weekly', time: '08:00', amount: 1, days: model.ALL_DAYS.slice(), active: true }]; state.medicines.push(value); }
+    else state.medicines[index] = value;
+    app.persist(); this.setData({ tab: 'medicines', screen: 'main' }); this.refresh(); toast('药品已保存');
+  },
+  deleteMedicine() {
+    const id = this.data.editingId; wx.showModal({ title: '删除药品？', content: '提醒规则将删除，已完成的事件记录保留。', success: response => {
+      if (!response.confirm) return;
+      app.globalData.state.medicines = app.globalData.state.medicines.filter(item => item.id !== id);
+      app.persist(); this.setData({ tab: 'medicines', screen: 'main' }); this.refresh();
+    } });
+  },
+  addReminder() { if (!this.data.editingId) { toast('请先保存药品'); return; } this.editReminder(null); },
+  openReminder(event) { this.editReminder(event.currentTarget.dataset.id); },
+  editReminder(reminderId) {
+    const medicine = app.globalData.state.medicines.find(item => item.id === this.data.editingId);
+    const rule = medicine.reminders.find(item => item.id === reminderId);
+    const form = rule ? clone(rule) : { id: model.id('r'), type: 'weekly', time: '08:00', amount: 1, days: model.ALL_DAYS.slice(), active: true,
+      cycleStart: model.dayKey(new Date()), activeDays: 21, pauseDays: 7 };
+    form.cycleStart = form.cycleStart || model.dayKey(new Date());
+    form.activeDays = form.activeDays == null ? 21 : form.activeDays;
+    form.pauseDays = form.pauseDays == null ? 7 : form.pauseDays;
+    form.days = form.days || model.ALL_DAYS.slice();
+    this.setData({ screen: 'reminder', editingReminderId: rule ? rule.id : '', formReminder: form,
+      reminderTypeIndex: form.type === 'cycle' ? 1 : 0,
+      reminderWeekdays: [1, 2, 3, 4, 5, 6, 0].map(day => ({ value: day, label: WEEK[day], selected: form.days.includes(day) })) });
+  },
+  changeReminderType(event) { const index = Number(event.detail.value), form = { ...this.data.formReminder, type: index ? 'cycle' : 'weekly' }; this.setData({ reminderTypeIndex: index, formReminder: form }); },
+  changeReminderTime(event) { this.setData({ 'formReminder.time': event.detail.value }); },
+  changeCycleStart(event) { this.setData({ 'formReminder.cycleStart': event.detail.value }); },
+  reminderInput(event) { const form = { ...this.data.formReminder }; form[event.currentTarget.dataset.field] = event.detail.value; this.setData({ formReminder: form }); },
+  toggleWeekday(event) { const day = Number(event.currentTarget.dataset.day), form = { ...this.data.formReminder }; form.days = form.days.includes(day) ? form.days.filter(item => item !== day) : form.days.concat(day); this.setData({ formReminder: form, reminderWeekdays: this.data.reminderWeekdays.map(item => ({ ...item, selected: form.days.includes(item.value) })) }); },
+  toggleReminderActive() { this.setData({ 'formReminder.active': !this.data.formReminder.active }); },
+  saveReminder() {
+    const state = app.globalData.state, medicine = state.medicines.find(item => item.id === this.data.editingId), form = this.data.formReminder;
+    const amount = Number(form.amount), activeDays = Number(form.activeDays), pauseDays = Number(form.pauseDays);
+    if (!form.time || !Number.isFinite(amount) || amount <= 0 || (form.type === 'weekly' && !form.days.length) ||
+      (form.type === 'cycle' && (!form.cycleStart || !Number.isInteger(activeDays) || activeDays < 1 || !Number.isInteger(pauseDays) || pauseDays < 1))) { toast('请检查时间、用量与重复规则'); return; }
+    const value = { ...form, amount, activeDays, pauseDays };
+    const index = medicine.reminders.findIndex(item => item.id === value.id);
+    if (index < 0) medicine.reminders.push(value); else medicine.reminders[index] = value;
+    app.persist(); this.editMedicine(medicine.id); this.refresh(); toast('提醒已保存');
+  },
+  deleteReminder() {
+    const medicine = app.globalData.state.medicines.find(item => item.id === this.data.editingId);
+    wx.showModal({ title: '删除提醒？', content: '已有事件记录仍会保留。', success: response => {
+      if (!response.confirm) return;
+      medicine.reminders = medicine.reminders.filter(item => item.id !== this.data.editingReminderId);
+      app.persist(); this.editMedicine(medicine.id); this.refresh();
+    } });
+  },
+  backToMain() { if (this.data.screen === 'reminder') this.editMedicine(this.data.editingId); else this.setData({ screen: 'main' }); this.refresh(); },
+  openManual() { this.setData({ screen: 'manual', manualMedicineIndex: 0, manualAmount: '1' }); },
+  manualSelectMedicine(event) { this.setData({ manualMedicineIndex: Number(event.detail.value) }); },
+  manualAmountInput(event) { this.setData({ manualAmount: event.detail.value }); },
+  saveManualDose() {
+    const medicine = app.globalData.state.medicines[this.data.manualMedicineIndex];
+    if (!medicine || !model.manualDose(app.globalData.state, medicine.id, Number(this.data.manualAmount))) { toast('请选择药品并填写有效用量'); return; }
+    app.persist(); this.setData({ screen: 'main', tab: 'overview' }); this.refresh(); toast('已补记服药');
+  },
+  switchAnalysis(event) { this.setData({ analysisMode: event.currentTarget.dataset.mode }); this.refresh(); },
+  changeRange(event) { this.setData({ rangeIndex: Number(event.detail.value) }); this.refresh(); },
+  previousMonth() { const date = model.dateOf(this.data.selectedDay); date.setMonth(date.getMonth() - 1, 1); this.setData({ selectedDay: model.dayKey(date) }); this.refresh(); },
+  nextMonth() { const date = model.dateOf(this.data.selectedDay); date.setMonth(date.getMonth() + 1, 1); this.setData({ selectedDay: model.dayKey(date) }); this.refresh(); },
+  selectCalendarDay(event) { this.setData({ selectedDay: event.currentTarget.dataset.day }); this.refresh(); }
+});

@@ -2,77 +2,16 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f8f6f1">
-  <meta name="description" content="安心服药：中文服药提醒交互演示。">
-  <title>安心服药 · 中文交互 Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9fe">
+  <meta name="description" content="MedTimer 中文微信小程序界面与交互预览。">
+  <title>MedTimer · 微信小程序预览</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <div class="app-shell">
-    <aside class="sidebar" aria-label="主导航">
-      <div class="brand"><span class="brand-mark" aria-hidden="true">✳</span><span><strong>安心服药</strong><small>用药计划 · 演示版</small></span></div>
-      <div class="side-label">工作台</div>
-      <nav class="nav-list" aria-label="页面">
-        <button class="nav-item active" data-view="today" type="button"><span class="nav-icon">▦</span> 今日计划</button>
-        <button class="nav-item" data-view="medicines" type="button"><span class="nav-icon">▤</span> 我的药品</button>
-        <button class="nav-item" data-view="history" type="button"><span class="nav-icon">◷</span> 服药记录</button>
-      </nav>
-      <div class="side-bottom">
-        <div class="privacy-card"><span class="privacy-icon">♧</span><strong>仅在本机保存</strong><p>演示数据保存在当前浏览器。关闭网页后再次打开，记录仍会保留。</p></div>
-        <button class="reset-link" id="reset-demo" type="button">↺ 重置演示数据</button><a class="source-link" href="https://github.com/Futsch1/medTimer" target="_blank" rel="noopener noreferrer">参考项目：MedTimer ↗</a>
-      </div>
-    </aside>
-
-    <main class="main-content" id="main-content">
-      <header class="topbar">
-        <div class="mobile-brand"><span class="brand-mark" aria-hidden="true">✳</span><strong>安心服药</strong></div>
-        <div class="topbar-right"><span class="demo-pill"><span class="pulse-dot"></span> 交互演示</span><span class="avatar" aria-label="演示用户">安</span></div>
-      </header>
-
-      <section class="page-view" id="view-today" aria-labelledby="today-title">
-        <div class="page-heading"><div><p class="eyebrow" id="today-date"></p><h1 id="today-title">今天的用药安排</h1><p class="lead">按已有的用药计划查看和记录每一次服药。</p></div><button class="button button-light" id="open-add-today" type="button"><span>＋</span> 添加药品</button></div>
-        <div class="hero-grid">
-          <div class="hero-card">
-            <div class="hero-top"><span class="hero-label"><span class="mini-sparkle">✦</span> 下一次提醒</span><span class="hero-badge">按计划进行</span></div>
-            <div id="next-dose"></div>
-            <div class="hero-foot"><span aria-hidden="true">◴</span> “已服用”只记录您的确认；本网页 Demo 不发送系统通知。</div>
-          </div>
-          <div class="progress-card"><div class="progress-top"><span class="section-kicker">今日进度</span><span class="progress-icon" aria-hidden="true">◌</span></div><div class="progress-number"><strong id="progress-done">0</strong><span id="progress-total">/ 0 次</span></div><p>已确认服用</p><div class="progress-track"><span id="progress-fill"></span></div><div class="progress-caption" id="progress-caption"></div></div>
-        </div>
-        <div class="section-heading"><div><span class="section-kicker">REMINDER EVENTS</span><h2>用药事件</h2></div><button class="text-button" id="simulate-reminder" type="button">◉ 触发下一条提醒</button></div>
-        <div class="day-toolbar"><button type="button" id="prev-day" aria-label="前一天">←</button><strong id="selected-day"></strong><button type="button" id="next-day" aria-label="后一天">→</button><button type="button" id="jump-today">回到今天</button></div>
-        <div class="event-filters" aria-label="事件筛选"><button class="active" type="button" data-filter="all">全部</button><button type="button" data-filter="scheduled">待触发</button><button type="button" data-filter="raised">待处理</button><button type="button" data-filter="taken">已服用</button><button type="button" data-filter="skipped">已跳过</button></div>
-        <div class="schedule-list" id="schedule-list"></div>
-        <div class="flow-note" id="flow-note">计划按每条提醒的时间和星期生成；到点后成为待处理事件。确认服用才会扣减库存，稍后提醒保留同一事件。</div>
-        <div class="bottom-grid"><div class="info-card"><span class="info-symbol">♡</span><div><strong>每一次确认都由您决定</strong><p>如果暂时无法确定是否已服药，可先选择“稍后提醒”。请根据真实情况更新记录。</p></div></div><div class="info-card"><span class="info-symbol blue">▣</span><div><strong>留意药品库存</strong><p id="stock-insight">为药品填写库存后，这里会提示需要补充的药品。</p></div></div></div>
-      </section>
-
-      <section class="page-view hidden" id="view-medicines" aria-labelledby="medicines-title">
-        <div class="page-heading"><div><p class="eyebrow">药品管理</p><h1 id="medicines-title">药品与提醒规则</h1><p class="lead">一种药品可设置多条提醒，每条规则有独立时间、用量和执行星期。</p></div><button class="button button-dark" id="open-add-medicines" type="button"><span>＋</span> 添加药品</button></div>
-        <div class="section-heading medicines-heading"><div><span class="section-kicker">YOUR MEDICINES</span><h2>药品清单 <span id="medicine-count" class="count-tag"></span></h2></div></div>
-        <div class="medicine-grid" id="medicine-list"></div>
-      </section>
-
-      <section class="page-view hidden" id="view-history" aria-labelledby="history-title">
-        <div class="page-heading"><div><p class="eyebrow">服药记录</p><h1 id="history-title">最近的记录</h1><p class="lead">每条记录来自一次提醒事件；可修正误点，库存会同步调整。</p></div><button class="button button-light" id="export-history" type="button">↓ 导出 JSON</button></div>
-        <div class="history-card"><div class="history-card-head"><span>记录明细</span><span id="history-count"></span></div><div id="history-list"></div></div>
-      </section>
-    </main>
-  </div>
-
-  <nav class="mobile-nav" aria-label="手机导航"><button class="active" data-view="today" type="button"><span>▦</span>今日</button><button data-view="medicines" type="button"><span>▤</span>药品</button><button data-view="history" type="button"><span>◷</span>记录</button></nav>
-
-  <dialog id="add-dialog" class="modal"><form id="add-form" novalidate><div class="modal-head"><div><span class="section-kicker">MEDICINE & FIRST REMINDER</span><h2>添加药品</h2></div><button class="icon-button" id="close-add" type="button" aria-label="关闭">×</button></div><p class="modal-intro">请按已有用药方案填写。库存单位与单次用量单位保持一致。</p><div class="form-grid"><label class="field wide">药品名称 <input id="medicine-name" name="name" placeholder="例如：示例药品 D" maxlength="40" required></label><label class="field">单次用量 <input id="medicine-dose" name="dose" type="number" min="0.1" max="9999" step="0.1" value="1" required></label><label class="field">提醒时间 <input id="medicine-time" name="time" type="time" value="08:00" required></label><label class="field">当前库存 <input id="medicine-stock" name="stock" type="number" min="0" max="9999" step="0.1" value="30" required></label><label class="field">库存单位 <input id="medicine-unit" name="unit" placeholder="例如：片" maxlength="12" value="片" required></label><label class="field wide">备注（选填） <input id="medicine-note" name="note" placeholder="例如：早餐后" maxlength="60"></label></div><p class="form-error" id="form-error" role="alert"></p><div class="modal-actions"><button class="button button-light" id="cancel-add" type="button">取消</button><button class="button button-dark" type="submit">保存药品</button></div></form></dialog>
-
-  <dialog id="reminder-dialog" class="modal"><form id="reminder-form" novalidate><div class="modal-head"><div><span class="section-kicker">REMINDER RULE</span><h2 id="reminder-dialog-title">设置提醒</h2></div><button class="icon-button" id="close-reminder" type="button" aria-label="关闭">×</button></div><p class="modal-intro" id="reminder-medicine-name"></p><div class="form-grid"><label class="field">提醒时间 <input id="reminder-time" type="time" required></label><label class="field">单次用量 <input id="reminder-dose" type="number" min="0.1" max="9999" step="0.1" required></label><fieldset class="weekday-field"><legend>执行星期</legend><div class="weekdays" id="reminder-days"><label><input type="checkbox" value="1" checked>一</label><label><input type="checkbox" value="2" checked>二</label><label><input type="checkbox" value="3" checked>三</label><label><input type="checkbox" value="4" checked>四</label><label><input type="checkbox" value="5" checked>五</label><label><input type="checkbox" value="6" checked>六</label><label><input type="checkbox" value="0" checked>日</label></div></fieldset></div><p class="form-error" id="reminder-error" role="alert"></p><div class="modal-actions"><button class="button button-light" id="cancel-reminder" type="button">取消</button><button class="button button-dark" type="submit">保存提醒</button></div></form></dialog>
-
-  <dialog id="stock-dialog" class="modal small-modal"><form id="stock-form" novalidate><div class="modal-head"><div><span class="section-kicker">STOCK</span><h2>修正库存</h2></div><button class="icon-button" id="close-stock" type="button" aria-label="关闭">×</button></div><p class="modal-intro" id="stock-medicine-name"></p><label class="field">当前实际库存 <input id="stock-value" type="number" min="0" max="9999" step="0.1" required></label><p class="form-error" id="stock-error" role="alert"></p><div class="modal-actions"><button class="button button-light" id="cancel-stock" type="button">取消</button><button class="button button-dark" type="submit">保存库存</button></div></form></dialog>
-
-  <dialog id="notification-dialog" class="modal small-modal"><div class="modal-head"><div><span class="section-kicker">REMINDER RAISED</span><h2>用药提醒已触发</h2></div><button class="icon-button" id="close-notification" type="button" aria-label="关闭">×</button></div><p class="modal-intro" id="notification-message"></p><div class="notification-actions"><button class="button button-dark" type="button" data-notification-action="taken">已服用</button><button class="button button-light" type="button" data-notification-action="snooze">10 分钟后提醒</button><button class="button button-light" type="button" data-notification-action="skip">跳过本次</button></div></dialog>
-
-  <dialog id="confirm-dialog" class="modal small-modal"><div class="modal-head"><div><span class="section-kicker">CONFIRM ACTION</span><h2 id="confirm-title">确认操作</h2></div><button class="icon-button" id="close-confirm" type="button" aria-label="关闭">×</button></div><p class="modal-intro" id="confirm-message"></p><div class="modal-actions"><button class="button button-light" id="cancel-confirm" type="button">取消</button><button class="button button-dark" id="accept-confirm" type="button">确认</button></div></dialog>
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="preview-context"><span>WECHAT MINI PROGRAM PREVIEW</span><strong>MedTimer 中文小程序</strong><p>右侧为可操作的手机预览；仓库内提供原生 WXML / WXSS 小程序源码。</p><a href="https://github.com/ranielZhang/medtimer-zh-web-demo">查看 GitHub 源码 ↗</a></div>
+  <div class="phone" id="phone"><div class="status-bar"><span id="clock">09:41</span><span class="status-signals">●●●　▰</span></div><div id="app" class="app"></div><div class="home-indicator"></div></div>
+  <script src="./miniprogram/lib/model.js"></script>
   <script src="./app.js" defer></script>
 </body>
 </html>
