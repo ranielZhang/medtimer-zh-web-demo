@@ -33,6 +33,11 @@ test('fixture is a complete, valid dataset with unique medicine and reminder IDs
   }
 });
 
+test('dose amounts use half-unit increments only', () => {
+  for (const amount of [0.5, 1, 1.5, 2, 2.5]) assert.equal(model.validDoseAmount(amount), true);
+  for (const amount of [0, 0.1, 0.25, 1.2, 1.75, -0.5, NaN, Infinity]) assert.equal(model.validDoseAmount(amount), false);
+});
+
 test('weekly, disabled, and cycle rules cover weekday boundaries and year rollover', () => {
   const state = scenario();
   assert.deepEqual(model.scheduled(state, '2026-10-12').map(row => row.reminder.id), ['daily-am', 'mon-wed-fri']); // Monday
@@ -90,13 +95,13 @@ test('stock cannot go below zero and fractional doses remain exact after correct
 
 test('manual doses reject invalid input and create independent, analyzable history', () => {
   const state = scenario(), now = new Date('2026-10-12T15:05:00');
-  for (const amount of [0, -1, NaN, Infinity]) assert.equal(model.manualDose(state, 'daily', amount, now), null);
+  for (const amount of [0, -1, 0.25, 1.2, 1.75, NaN, Infinity]) assert.equal(model.manualDose(state, 'daily', amount, now), null);
   assert.equal(model.manualDose(state, 'missing', 1, now), null);
-  const event = model.manualDose(state, 'daily', 1.25, now);
+  const event = model.manualDose(state, 'daily', 1.5, now);
   assert.equal(event.manual, true);
   assert.equal(event.status, 'taken');
   assert.equal(event.time, '15:05');
-  assert.equal(state.medicines[0].stock, 3.25);
+  assert.equal(state.medicines[0].stock, 3);
   assert.equal(model.history(state).length, 1);
   assert.equal(model.stats(state, '2026-10-12', 7).at(-1).taken, 1);
 });

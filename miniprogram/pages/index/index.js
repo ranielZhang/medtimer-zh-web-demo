@@ -167,8 +167,8 @@ Page({
   saveReminder() {
     const state = app.globalData.state, medicine = state.medicines.find(item => item.id === this.data.editingId), form = this.data.formReminder;
     const amount = Number(form.amount), activeDays = Number(form.activeDays), pauseDays = Number(form.pauseDays);
-    if (!form.time || !Number.isFinite(amount) || amount <= 0 || (form.type === 'weekly' && !form.days.length) ||
-      (form.type === 'cycle' && (!form.cycleStart || !Number.isInteger(activeDays) || activeDays < 1 || !Number.isInteger(pauseDays) || pauseDays < 1))) { toast('请检查时间、用量与重复规则'); return; }
+    if (!form.time || !model.validDoseAmount(amount) || (form.type === 'weekly' && !form.days.length) ||
+      (form.type === 'cycle' && (!form.cycleStart || !Number.isInteger(activeDays) || activeDays < 1 || !Number.isInteger(pauseDays) || pauseDays < 1))) { toast('请检查时间、用量（按 0.5 为单位）与重复规则'); return; }
     const value = { ...form, amount, activeDays, pauseDays };
     const index = medicine.reminders.findIndex(item => item.id === value.id);
     if (index < 0) medicine.reminders.push(value); else medicine.reminders[index] = value;
@@ -188,7 +188,7 @@ Page({
   manualAmountInput(event) { this.setData({ manualAmount: event.detail.value }); },
   saveManualDose() {
     const medicine = app.globalData.state.medicines[this.data.manualMedicineIndex];
-    if (!medicine || !model.manualDose(app.globalData.state, medicine.id, Number(this.data.manualAmount))) { toast('请选择药品并填写有效用量'); return; }
+    if (!medicine || !model.manualDose(app.globalData.state, medicine.id, Number(this.data.manualAmount))) { toast('用量需大于 0，并按 0.5 为单位填写'); return; }
     app.persist(); this.setData({ screen: 'main', tab: 'overview' }); this.refresh(); toast('已补记服药');
   },
   switchAnalysis(event) { this.setData({ analysisMode: event.currentTarget.dataset.mode }); this.refresh(); },

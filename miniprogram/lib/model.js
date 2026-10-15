@@ -5,6 +5,7 @@ function dayKey(date) { return [date.getFullYear(), String(date.getMonth() + 1).
 function dateOf(day) { return new Date(+day.slice(0, 4), +day.slice(5, 7) - 1, +day.slice(8, 10)); }
 function plusDays(day, offset) { const date = dateOf(day); date.setDate(date.getDate() + offset); return dayKey(date); }
 function at(day, time) { return dateOf(day).getTime() + (+time.slice(0, 2) * 60 + +time.slice(3, 5)) * 60000; }
+function validDoseAmount(amount) { return Number.isFinite(amount) && amount > 0 && Math.abs(amount * 2 - Math.round(amount * 2)) < 1e-9; }
 function valid(state) { return !!(state && state.version === 1 && Array.isArray(state.medicines) && state.events && Array.isArray(state.audit)); }
 function seed() {
   return { version: 1, medicines: [
@@ -74,7 +75,7 @@ function outcome(state, key, status, now = new Date()) {
 }
 function manualDose(state, medicineId, amount, now = new Date()) {
   const medicine = state.medicines.find(item => item.id === medicineId);
-  if (!medicine || !Number.isFinite(amount) || amount <= 0) return null;
+  if (!medicine || !validDoseAmount(amount)) return null;
   const key = dayKey(now) + ':manual-' + id('e');
   const deducted = Math.min(medicine.stock, amount); medicine.stock = +(medicine.stock - deducted).toFixed(2);
   const event = { key, day: dayKey(now), medicineId, reminderId: null, name: medicine.name, amount, unit: medicine.unit,
@@ -93,6 +94,6 @@ function stats(state, endDay, count) {
   return result;
 }
 function week(day) { const offset = dateOf(day).getDay(); const monday = plusDays(day, -((offset + 6) % 7)); return Array.from({ length: 7 }, (_, index) => plusDays(monday, index)); }
-const api = { ALL_DAYS, STATUSES, id, dayKey, dateOf, plusDays, at, valid, seed, activeOn, scheduled, findRow, raise, reconcile, snooze, outcome, manualDose, history, stats, week };
+const api = { ALL_DAYS, STATUSES, id, dayKey, dateOf, plusDays, at, valid, validDoseAmount, seed, activeOn, scheduled, findRow, raise, reconcile, snooze, outcome, manualDose, history, stats, week };
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
 else if (typeof window !== 'undefined') window.MedTimerModel = api;
