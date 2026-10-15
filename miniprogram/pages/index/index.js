@@ -12,7 +12,7 @@ Page({
     statusBarHeight: 24, tab: 'overview', screen: 'main', selectedDay: '', monthTitle: '', weekDates: [],
     filters: [{ value: 'all', label: '全部' }, { value: 'scheduled', label: '待触发' }, { value: 'raised', label: '待处理' }, { value: 'taken', label: '已服用' }, { value: 'skipped', label: '已跳过' }],
     filter: 'all', displayRows: [], medicineCards: [], analysisMode: 'chart', rangeOptions: ['7 天', '30 天'], rangeIndex: 0,
-    chartBars: [], takenCount: 0, skippedCount: 0, takenRate: 0, totalEvents: 0, rangeDays: 7,
+    chartBars: [], takenCount: 0, skippedCount: 0, takenRate: 0, totalEvents: 0, rangeDays: 7, concentrationSeries: [], concentrationLabels: [],
     historyRows: [], weekdayLabels: ['日', '一', '二', '三', '四', '五', '六'], calendarTitle: '', calendarCells: [], calendarEventRows: [],
     medicineNames: [], manualMedicineIndex: 0, manualAmount: '1', editingId: '', editingReminderId: '',
     formMedicine: {}, editorReminders: [], reminderTypes: ['每周固定时间', '周期疗程'], reminderTypeIndex: 0,
@@ -41,7 +41,8 @@ Page({
     all.sort((a, b) => a.time.localeCompare(b.time));
     const selected = all.filter(row => this.data.filter === 'all' || row.status === this.data.filter || (this.data.filter === 'raised' && row.status === 'snoozed'));
     const medicineCards = state.medicines.map(medicine => ({ ...medicine, low: medicine.stock <= medicine.threshold,
-      reminderCount: medicine.reminders.length, times: medicine.reminders.filter(rule => rule.active).map(rule => rule.time).join('、') || '已停用' }));
+      needsConcentration: !model.hasConcentrationParams(medicine), reminderCount: medicine.reminders.length,
+      times: medicine.reminders.filter(rule => rule.active).map(rule => rule.time).join('、') || '已停用' }));
     const items = model.history(state);
     const rangeDays = this.data.rangeIndex ? 30 : 7;
     const rangeItems = items.filter(item => item.day >= model.plusDays(model.dayKey(new Date()), 1 - rangeDays));
@@ -51,13 +52,39 @@ Page({
     const max = Math.max(1, ...bars.map(item => item.taken + item.skipped));
     const chartBars = (rangeDays === 7 ? bars : bars.filter((_, index) => index % 3 === 0)).map(item => ({ ...item,
       takenHeight: Math.round(item.taken / max * 100), skippedHeight: Math.round(item.skipped / max * 100) }));
+    const concentrationSeries = model.concentrationSeries(state, model.dayKey(new Date()), rangeDays);
+    const rangeStart = model.plusDays(model.dayKey(new Date()), 1 - rangeDays);
+    const concentrationLabels = Array.from({ length: 5 }, (_, index) => model.plusDays(rangeStart, Math.floor((rangeDays - 1) * index / 4)).slice(5).replace('-', '/'));
     const historyRows = items.map(item => ({ key: item.key, timeLabel: timeLabel(item.processedAt), name: item.name,
       statusText: STATUS[item.status][0], amount: item.amount, unit: item.unit }));
     const calendar = this.buildCalendar(day, state);
     this.setData({ selectedDay: day, monthTitle: dateTitle(day), weekDates, displayRows: selected, medicineCards,
       chartBars, rangeDays, takenCount, skippedCount, takenRate: takenCount + skippedCount ? Math.round(takenCount * 100 / (takenCount + skippedCount)) : 0,
       totalEvents: items.length, historyRows, calendarTitle: calendar.title, calendarCells: calendar.cells,
-      calendarEventRows: all, medicineNames: state.medicines.map(item => item.name) });
+      calendarEventRows: all, medicineNames: state.medicines.map(item => item.name), concentrationSeries, concentrationLabels,
+      concentrationHasData: concentrationSeries.some(series => series.points.some(point => point.value > 0)) }, () => this.drawConcentration());
+  },
+  drawConcentration() {
+    if (this.data.analysisMode !== 'concentration' || !this.data.concentrationSeries.length) return;
+    wx.createSelectorQuery().in(this).select('.concentration-canvas').boundingClientRect(rect => {
+      if (!rect) return;
+      const context = wx.createCanvasContext('concentrationChart', this);
+      const width = rect.width, height = rect.height, left = 27, right = 8, top = 12, bottom = 27;
+      const plotWidth = width - left - right, plotHeight = height - top - bottom;
+      context.setStrokeStyle('#c4c7d2'); context.setLineWidth(1);
+      [0, 0.5, 1].forEach(ratio => { const y = top + plotHeight * ratio; context.beginPath(); context.moveTo(left, y); context.lineTo(width - right, y); context.stroke(); });
+      this.data.concentrationSeries.forEach(series => {
+        context.beginPath(); context.setStrokeStyle(series.color); context.setLineWidth(2);
+        series.points.forEach((point, index) => {
+          const x = left + point.x * plotWidth, y = top + plotHeight * (1 - point.value / 100);
+          if (index === 0) context.moveTo(x, y); else context.lineTo(x, y);
+        });
+        context.stroke();
+      });
+      context.setFillStyle('#6b6f7c'); context.setFontSize(10); context.setTextAlign('center');
+      this.data.concentrationLabels.forEach((label, index) => context.fillText(label, left + plotWidth * index / 4, height - 5));
+      context.draw();
+    }).exec();
   },
   formatRow(row) {
     return { key: row.key, medicineId: row.medicine.id, name: row.medicine.name, color: row.medicine.color,
@@ -116,7 +143,7 @@ Page({
   addMedicine() { this.editMedicine(null); },
   editMedicine(medicineId) {
     const medicine = app.globalData.state.medicines.find(item => item.id === medicineId);
-    const form = medicine ? clone(medicine) : { id: model.id('m'), name: '', color: '#5b6e9a', icon: '▣', stock: 0, unit: '片', threshold: 5, notes: '', tags: [], reminders: [] };
+    const form = medicine ? clone(medicine) : { id: model.id('m'), name: '', color: '#5b6e9a', icon: '▣', stock: 0, unit: '片', threshold: 5, notes: '', tags: [], halfLifeHours: '', peakTimeHours: '', reminders: [] };
     form.tagText = form.tags.join(',');
     this.setData({ screen: 'editor', editingId: medicine ? medicine.id : '', formMedicine: form,
       editorReminders: this.formatReminders(form.reminders) });
@@ -128,7 +155,10 @@ Page({
     const form = this.data.formMedicine, state = app.globalData.state;
     const stock = Number(form.stock), threshold = Number(form.threshold);
     if (!form.name.trim() || !form.unit.trim() || !Number.isFinite(stock) || stock < 0 || !Number.isFinite(threshold) || threshold < 0) { toast('请填写有效的药品名称与库存'); return; }
-    const value = { ...form, name: form.name.trim(), unit: form.unit.trim(), stock, threshold,
+    const halfLifeHours = form.halfLifeHours === '' || form.halfLifeHours == null ? null : Number(form.halfLifeHours);
+    const peakTimeHours = form.peakTimeHours === '' || form.peakTimeHours == null ? null : Number(form.peakTimeHours);
+    if ((halfLifeHours == null) !== (peakTimeHours == null) || (halfLifeHours != null && (!Number.isFinite(halfLifeHours) || halfLifeHours <= 0 || !Number.isFinite(peakTimeHours) || peakTimeHours <= 0))) { toast('半衰期和达峰时间需同时填写，且都大于 0'); return; }
+    const value = { ...form, name: form.name.trim(), unit: form.unit.trim(), stock, threshold, halfLifeHours, peakTimeHours,
       tags: form.tagText.split(/[,，]/).map(tag => tag.trim()).filter(Boolean) };
     delete value.tagText;
     const index = state.medicines.findIndex(item => item.id === value.id);

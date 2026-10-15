@@ -31,6 +31,36 @@ function activeOn(reminder, day) {
   }
   return (reminder.days || ALL_DAYS).includes(dateOf(day).getDay());
 }
+function hasConcentrationParams(medicine) {
+  const halfLifeHours = Number(medicine && medicine.halfLifeHours), peakTimeHours = Number(medicine && medicine.peakTimeHours);
+  return Number.isFinite(halfLifeHours) && halfLifeHours > 0 && Number.isFinite(peakTimeHours) && peakTimeHours > 0;
+}
+function concentrationSeries(state, endDay, count = 7) {
+  const days = count === 30 ? 30 : 7, startDay = plusDays(endDay, 1 - days);
+  const startAt = at(startDay, '00:00'), endAt = at(plusDays(endDay, 1), '00:00');
+  const samples = days === 7 ? 169 : 361, interval = (endAt - startAt) / (samples - 1);
+  const takenEvents = history(state).filter(event => event.status === 'taken');
+  return state.medicines.filter(hasConcentrationParams).map(medicine => {
+    const halfLifeHours = Number(medicine.halfLifeHours), peakTimeHours = Number(medicine.peakTimeHours);
+    const lookback = Math.min(30 * 86400000, (peakTimeHours + halfLifeHours * 10) * 3600000);
+    const doses = takenEvents.filter(event => event.medicineId === medicine.id)
+      .map(event => ({ at: event.processedAt || at(event.day, event.time), amount: Number(event.amount) }))
+      .filter(event => Number.isFinite(event.at) && Number.isFinite(event.amount) && event.amount > 0 && event.at >= startAt - lookback && event.at < endAt);
+    const raw = Array.from({ length: samples }, (_, index) => {
+      const sampleAt = startAt + interval * index;
+      return doses.reduce((total, dose) => {
+        const elapsed = (sampleAt - dose.at) / 3600000;
+        if (elapsed < 0) return total;
+        // Demo approximation: rise linearly until the configured peak, then decay by the configured half-life.
+        return total + dose.amount * (elapsed < peakTimeHours ? elapsed / peakTimeHours : Math.pow(0.5, (elapsed - peakTimeHours) / halfLifeHours));
+      }, 0);
+    });
+    const peak = Math.max(0, ...raw);
+    // Normalize each medicine against its own peak so the chart only communicates a relative trend.
+    return { medicineId: medicine.id, name: medicine.name, color: medicine.color || '#536797', unit: medicine.unit,
+      halfLifeHours, peakTimeHours, points: raw.map((value, index) => ({ x: index / (samples - 1), value: peak ? value / peak * 100 : 0 })) };
+  });
+}
 function scheduled(state, day) {
   const rows = [];
   state.medicines.forEach(medicine => medicine.reminders.forEach(reminder => {
@@ -94,6 +124,6 @@ function stats(state, endDay, count) {
   return result;
 }
 function week(day) { const offset = dateOf(day).getDay(); const monday = plusDays(day, -((offset + 6) % 7)); return Array.from({ length: 7 }, (_, index) => plusDays(monday, index)); }
-const api = { ALL_DAYS, STATUSES, id, dayKey, dateOf, plusDays, at, valid, validDoseAmount, seed, activeOn, scheduled, findRow, raise, reconcile, snooze, outcome, manualDose, history, stats, week };
+const api = { ALL_DAYS, STATUSES, id, dayKey, dateOf, plusDays, at, valid, validDoseAmount, hasConcentrationParams, concentrationSeries, seed, activeOn, scheduled, findRow, raise, reconcile, snooze, outcome, manualDose, history, stats, week };
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
 else if (typeof window !== 'undefined') window.MedTimerModel = api;

@@ -38,6 +38,30 @@ test('dose amounts use half-unit increments only', () => {
   for (const amount of [0, 0.1, 0.25, 1.2, 1.75, -0.5, NaN, Infinity]) assert.equal(model.validDoseAmount(amount), false);
 });
 
+test('concentration trend uses configured medicine parameters and taken dose history', () => {
+  const state = scenario(), medicine = state.medicines[0];
+  medicine.halfLifeHours = 4;
+  medicine.peakTimeHours = 1;
+  state.medicines[1].halfLifeHours = 6;
+  state.medicines[1].peakTimeHours = 1;
+  const key = '2026-10-12:daily-am';
+  model.outcome(state, key, 'taken', new Date('2026-10-12T08:00:00'));
+  model.outcome(state, '2026-10-12:mon-wed-fri', 'skipped', new Date('2026-10-12T08:30:00'));
+  const series = model.concentrationSeries(state, '2026-10-12', 7);
+  assert.equal(series.length, 2);
+  assert.equal(series[0].medicineId, 'daily');
+  assert.equal(series[0].points.length, 169);
+  const dayOffset = 6 * 24;
+  assert.equal(series[0].points[dayOffset + 9].value, 100); // reaches peak one hour after dose
+  assert.equal(series[0].points[dayOffset + 13].value, 50); // halves four hours after peak
+  assert.equal(series[1].points.every(point => point.value === 0), true); // skipped doses do not contribute
+  assert.equal(model.concentrationSeries(state, '2026-10-12', 30)[0].points.length, 361);
+  medicine.peakTimeHours = null;
+  const remaining = model.concentrationSeries(state, '2026-10-12', 7);
+  assert.equal(remaining.length, 1);
+  assert.equal(remaining[0].medicineId, 'weekdays');
+});
+
 test('weekly, disabled, and cycle rules cover weekday boundaries and year rollover', () => {
   const state = scenario();
   assert.deepEqual(model.scheduled(state, '2026-10-12').map(row => row.reminder.id), ['daily-am', 'mon-wed-fri']); // Monday
