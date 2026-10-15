@@ -3,25 +3,46 @@
   const M = window.MedTimerModel;
   const query = new URLSearchParams(window.location.search);
   const fullDemo = query.get('demo') === 'full';
+  const familyPreview = ['caregiver', 'grandma'].includes(query.get('familyPreview')) ? query.get('familyPreview') : '';
   const showConcentration = fullDemo && query.get('view') === 'concentration';
   const showAnalysis = fullDemo && (showConcentration || query.get('view') === 'chart');
-  const STORE = fullDemo ? 'medtimer-wechat-preview-full-demo-v2' : 'medtimer-wechat-preview-v1';
+  const STORE = familyPreview ? 'medtimer-family-preview-' + familyPreview + '-v1' : fullDemo ? 'medtimer-wechat-preview-full-demo-v2' : 'medtimer-wechat-preview-v1';
+  const FAMILY_PREVIEW_STATE = 'medtimer-family-preview-shared-state-v1';
+  const FAMILY_PREVIEW_CODE = 'medtimer-family-preview-code-v1';
   const FAMILY_STORE = 'medtimer-family-group-demo-v1';
   const STATUS = { scheduled: ['待触发', '▣'], raised: ['待处理', '♧'], snoozed: ['已延后', '◷'], taken: ['已服用', '✓'], skipped: ['已跳过', '×'] };
   const WEEK = ['日', '一', '二', '三', '四', '五', '六'];
   const app = document.getElementById('app');
+  const familyChannel = familyPreview && typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('medtimer-family-preview-v1') : null;
   let state;
-  try { state = JSON.parse(localStorage.getItem(STORE)); } catch (_) { state = null; }
+  try { state = JSON.parse(localStorage.getItem(familyPreview ? FAMILY_PREVIEW_STATE : STORE)); } catch (_) { state = null; }
   function createDemoSeed() {
-    return fullDemo ? M.fullDemoSeed() : M.demoSeed();
+    return fullDemo || familyPreview ? M.fullDemoSeed() : M.demoSeed();
   }
   if (!M.valid(state)) state = createDemoSeed();
   let familyGroup;
   try { familyGroup = JSON.parse(localStorage.getItem(FAMILY_STORE)); } catch (_) { familyGroup = null; }
-  const ui = { tab: showAnalysis ? 'analysis' : 'overview', screen: 'main', day: M.dayKey(new Date()), filter: 'all', analysis: showConcentration ? 'concentration' : 'chart', range: fullDemo && query.get('range') === '30' ? 30 : 7, editingId: '', reminderId: '', form: null, rule: null, manualId: '', manualAmount: 1, familyInput: '', sheetKey: '', menu: false };
+  if (familyPreview) {
+    let code = localStorage.getItem(FAMILY_PREVIEW_CODE);
+    if (!/^\d{6}$/.test(code || '')) { code = M.createFamilyGroup().code; localStorage.setItem(FAMILY_PREVIEW_CODE, code); }
+    familyGroup = { code, role: familyPreview === 'caregiver' ? 'owner' : 'member', members: [
+      { id: 'caregiver', name: '周女士', relation: '女儿', role: '管理员' },
+      { id: 'grandma', name: '奶奶', relation: '本人', role: '成员' }
+    ] };
+  }
+  const ui = { tab: showAnalysis ? 'analysis' : familyPreview === 'grandma' && query.get('tab') === 'my' ? 'my' : 'overview', screen: 'main', day: M.dayKey(new Date()), filter: 'all', analysis: showConcentration ? 'concentration' : 'chart', range: fullDemo && query.get('range') === '30' ? 30 : 7, editingId: '', reminderId: '', form: null, rule: null, manualId: '', manualAmount: 1, familyInput: '', sheetKey: '', menu: false };
   function esc(value) { return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char])); }
   function clone(value) { return JSON.parse(JSON.stringify(value)); }
-  function save() { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (_) { alert('当前浏览器无法保存本地数据。'); } }
+  function save() {
+    try {
+      const serialized = JSON.stringify(state);
+      localStorage.setItem(STORE, serialized);
+      if (familyPreview) {
+        localStorage.setItem(FAMILY_PREVIEW_STATE, serialized);
+        if (familyChannel) familyChannel.postMessage({ state });
+      }
+    } catch (_) { alert('当前浏览器无法保存本地数据。'); }
+  }
   function title(day) { const date = M.dateOf(day); return (date.getMonth() + 1) + '月 ' + date.getFullYear(); }
   function timeText(value) { const date = new Date(value); return (date.getMonth() + 1) + '/' + date.getDate() + ' ' + String(date.getHours()).padStart(2, '0') + ':' + String(date.getMinutes()).padStart(2, '0'); }
   function med(id) { return state.medicines.find(item => item.id === id); }
@@ -47,7 +68,9 @@
   }
   function renderMine() {
     const familySummary = familyGroup ? '邀请码 ' + familyGroup.code + ' · ' + (familyGroup.role === 'owner' ? '管理员' : '成员') : '邀请家人一起管理用药安排';
-    return '<section class="mine-profile"><div class="mine-avatar">我</div><div><strong>本机演示账户</strong><small>数据保存在当前设备</small></div><span class="mine-chevron">›</span></section><div class="mine-stats"><div><strong>' + state.medicines.length + '</strong><small>种药品</small></div><div><strong>' + M.history(state).length + '</strong><small>条用药记录</small></div></div><button class="mine-row" data-action="family"><span class="mine-row-icon">⌂</span><span><strong>家庭组</strong><small>' + esc(familySummary) + '</small></span><b>›</b></button><button class="mine-row" data-action="about"><span class="mine-row-icon">ⓘ</span><span><strong>关于 MedTimer</strong><small>功能说明与演示边界</small></span><b>›</b></button><p class="notice">家庭成员协作需要获得长辈授权。当前演示尚未连接云端，成员关系和药品数据不会跨设备同步。</p>';
+    const profile = familyPreview === 'caregiver' ? '周女士 · 家庭组创建者' : familyPreview === 'grandma' ? '奶奶 · 家庭组普通成员' : '本机演示账户';
+    const storage = familyPreview ? '与另一部手机演示实时联动' : '数据保存在当前设备';
+    return '<section class="mine-profile"><div class="mine-avatar">我</div><div><strong>' + profile + '</strong><small>' + storage + '</small></div><span class="mine-chevron">›</span></section><div class="mine-stats"><div><strong>' + state.medicines.length + '</strong><small>种药品</small></div><div><strong>' + M.history(state).length + '</strong><small>条用药记录</small></div></div><button class="mine-row" data-action="family"><span class="mine-row-icon">⌂</span><span><strong>家庭组</strong><small>' + esc(familySummary) + '</small></span><b>›</b></button><button class="mine-row" data-action="about"><span class="mine-row-icon">ⓘ</span><span><strong>关于 MedTimer</strong><small>功能说明与演示边界</small></span><b>›</b></button><p class="notice">家庭成员协作需要获得长辈授权。' + (familyPreview ? '当前双手机联动仅在同一浏览器中模拟。' : '当前演示尚未连接云端，成员关系和药品数据不会跨设备同步。') + '</p>';
   }
   function renderAnalysis() {
     const options = '<div class="analysis-switch"><button class="' + (ui.analysis === 'chart' ? 'active' : '') + '" data-action="analysis" data-mode="chart" aria-label="图表">▥</button><button class="' + (ui.analysis === 'table' ? 'active' : '') + '" data-action="analysis" data-mode="table" aria-label="表格">▦</button><button class="' + (ui.analysis === 'calendar' ? 'active' : '') + '" data-action="analysis" data-mode="calendar" aria-label="日历">▣</button><button class="' + (ui.analysis === 'concentration' ? 'active' : '') + '" data-action="analysis" data-mode="concentration" aria-label="浓度趋势">↗</button>' + (['chart', 'concentration'].includes(ui.analysis) ? '<select data-field="range" aria-label="分析时间范围"><option value="7"' + (ui.range === 7 ? ' selected' : '') + '>7 天</option><option value="30"' + (ui.range === 30 ? ' selected' : '') + '>30 天</option></select>' : '') + '</div>';
@@ -110,6 +133,18 @@
     const fab = ui.screen === 'main' && ['overview', 'medicines'].includes(ui.tab) ? '<button class="fab" data-action="' + (ui.tab === 'overview' ? 'manual' : 'add-med') + '">' + (ui.tab === 'overview' ? '▰　补记服药' : '⊕　添加药品') + '</button>' : '';
     app.innerHTML = renderTop() + '<main class="scroll">' + body + '</main>' + tabbar + fab + (ui.menu ? '<div class="menu-pop"><button data-action="family">⌂　家庭组</button><button data-action="simulate">模拟触发下一条提醒</button><button data-action="reset">重置虚构数据</button><button data-action="about">关于与限制</button></div>' : '') + renderSheet();
   }
+  function applyFamilyPreviewState(nextState) {
+    if (!familyPreview || !M.valid(nextState)) return;
+    state = clone(nextState);
+    try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (_) {}
+    render();
+  }
+  if (familyChannel) familyChannel.onmessage = event => applyFamilyPreviewState(event.data && event.data.state);
+  if (familyPreview) window.addEventListener('storage', event => {
+    if (event.key === FAMILY_PREVIEW_STATE && event.newValue) {
+      try { applyFamilyPreviewState(JSON.parse(event.newValue)); } catch (_) {}
+    }
+  });
   function openMedicine(id) {
     const medicine = med(id);
     ui.editingId = medicine ? medicine.id : '';

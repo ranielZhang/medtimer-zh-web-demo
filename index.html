@@ -6,12 +6,13 @@
   <meta name="theme-color" content="#faf9fe">
   <meta name="description" content="MedTimer 中文微信小程序界面与交互预览。">
   <title>MedTimer · 微信小程序预览</title>
-  <link rel="stylesheet" href="./styles.css?v=family-my-1">
+  <script>if (new URLSearchParams(location.search).has("familyPreview")) document.documentElement.classList.add("family-embed");</script>
+  <link rel="stylesheet" href="./styles.css?v=family-sync-2">
 </head>
 <body>
-  <div class="preview-context"><strong>MedTimer</strong><p>让用药安排清楚，服用心里有数</p><a href="https://github.com/ranielZhang/medtimer-zh-web-demo">查看 GitHub 源码 ↗</a></div>
+  <div class="preview-context"><strong>MedTimer</strong><p>让用药安排清楚，服用心里有数</p><a href="./family-demo.html">查看家庭组双手机联动 ↗</a><a href="https://github.com/ranielZhang/medtimer-zh-web-demo">查看 GitHub 源码 ↗</a></div>
   <div class="phone" id="phone"><div class="status-bar"><span id="clock">09:41</span><span class="status-signals">●●●　▰</span></div><div id="app" class="app"></div><div class="home-indicator"></div></div>
-  <script src="./miniprogram/lib/model.js?v=family-my-1"></script>
-  <script src="./app.js?v=family-my-1" defer></script>
+  <script src="./miniprogram/lib/model.js?v=family-sync-2"></script>
+  <script src="./app.js?v=family-sync-2" defer></script>
 </body>
 </html>
