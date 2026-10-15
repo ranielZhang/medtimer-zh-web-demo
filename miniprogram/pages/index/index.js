@@ -127,7 +127,7 @@ Page({
     wx.showActionSheet({ itemList: actions, success: result => {
       if (result.tapIndex === 0) this.simulateNext();
       if (result.tapIndex === 1) wx.showModal({ title: '重置演示数据？', content: '药品与记录将恢复为虚构示例。', success: response => {
-        if (response.confirm) { app.globalData.state = model.seed(); app.persist(); this.refresh(); }
+        if (response.confirm) { app.globalData.state = model.demoSeed(); app.persist(); this.refresh(); }
       } });
       if (result.tapIndex === 2) wx.showModal({ title: 'MedTimer 小程序演示', content: '界面与核心提醒事件流程参考开源 Android 项目 MedTimer。数据只保存在本机；没有后台推送或医疗建议。', showCancel: false });
     } });

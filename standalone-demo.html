@@ -41,6 +41,24 @@ function seed() {
     ] }
   ], events: {}, audit: [] };
 }
+function demoSeed(now = new Date()) {
+  const state = seed(), today = dayKey(now), days = 30;
+  state.medicines.forEach((medicine, medicineIndex) => {
+    medicine.reminders.forEach((reminder, reminderIndex) => {
+      for (let age = days - 1; age >= 0; age--) {
+        const day = plusDays(today, -age), dueAt = at(day, reminder.time);
+        if (!activeOn(reminder, day) || (age === 0 && dueAt > now.getTime())) continue;
+        const skipped = (age + medicineIndex * 2 + reminderIndex * 3) % 7 === 3;
+        const key = day + ':' + reminder.id, status = skipped ? 'skipped' : 'taken';
+        state.events[key] = { key, day, medicineId: medicine.id, reminderId: reminder.id, name: medicine.name,
+          amount: reminder.amount, unit: medicine.unit, status, dueAt, raisedAt: null,
+          processedAt: Math.min(now.getTime(), dueAt + 15 * 60000), snoozeUntil: null,
+          deducted: status === 'taken' ? reminder.amount : 0, manual: false };
+      }
+    });
+  });
+  return state;
+}
 function activeOn(reminder, day) {
   if (!reminder.active) return false;
   if (reminder.type === 'cycle') {
@@ -144,7 +162,7 @@ function stats(state, endDay, count) {
   return result;
 }
 function week(day) { const offset = dateOf(day).getDay(); const monday = plusDays(day, -((offset + 6) % 7)); return Array.from({ length: 7 }, (_, index) => plusDays(monday, index)); }
-const api = { ALL_DAYS, STATUSES, id, dayKey, dateOf, plusDays, at, valid, validDoseAmount, hasConcentrationParams, concentrationSeries, seed, activeOn, scheduled, findRow, raise, reconcile, snooze, outcome, manualDose, history, stats, week };
+const api = { ALL_DAYS, STATUSES, id, dayKey, dateOf, plusDays, at, valid, validDoseAmount, hasConcentrationParams, concentrationSeries, seed, demoSeed, activeOn, scheduled, findRow, raise, reconcile, snooze, outcome, manualDose, history, stats, week };
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
 else if (typeof window !== 'undefined') window.MedTimerModel = api;
 
@@ -153,13 +171,14 @@ else if (typeof window !== 'undefined') window.MedTimerModel = api;
 (function () {
   'use strict';
   const M = window.MedTimerModel;
-  const STORE = 'medtimer-wechat-preview-v1';
+  const STORE = new URLSearchParams(window.location.search).get('demo') === 'full'
+    ? 'medtimer-wechat-preview-full-demo-v1' : 'medtimer-wechat-preview-v1';
   const STATUS = { scheduled: ['待触发', '▣'], raised: ['待处理', '♧'], snoozed: ['已延后', '◷'], taken: ['已服用', '✓'], skipped: ['已跳过', '×'] };
   const WEEK = ['日', '一', '二', '三', '四', '五', '六'];
   const app = document.getElementById('app');
   let state;
   try { state = JSON.parse(localStorage.getItem(STORE)); } catch (_) { state = null; }
-  if (!M.valid(state)) state = M.seed();
+  if (!M.valid(state)) state = M.demoSeed();
   const ui = { tab: 'overview', screen: 'main', day: M.dayKey(new Date()), filter: 'all', analysis: 'chart', range: 7, editingId: '', reminderId: '', form: null, rule: null, manualId: '', manualAmount: 1, sheetKey: '', menu: false };
   function esc(value) { return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char])); }
   function clone(value) { return JSON.parse(JSON.stringify(value)); }
@@ -290,7 +309,7 @@ else if (typeof window !== 'undefined') window.MedTimerModel = api;
     else if (action === 'month-prev' || action === 'month-next') { const d = M.dateOf(ui.day); d.setMonth(d.getMonth() + (action === 'month-prev' ? -1 : 1), 1); ui.day = M.dayKey(d); }
     else if (action === 'menu') ui.menu = !ui.menu;
     else if (action === 'simulate') return simulate();
-    else if (action === 'reset') { ui.menu = false; if (confirm('恢复为虚构示例？当前预览数据会被重置。')) { state = M.seed(); save(); ui.day = M.dayKey(new Date()); ui.screen = 'main'; ui.tab = 'overview'; } }
+    else if (action === 'reset') { ui.menu = false; if (confirm('恢复为虚构示例？当前预览数据会被重置。')) { state = M.demoSeed(); save(); ui.day = M.dayKey(new Date()); ui.screen = 'main'; ui.tab = 'overview'; } }
     else if (action === 'about') { ui.menu = false; alert('本项目参考开源 Android 应用 MedTimer 的界面与事件流程。数据仅保存在本机；网页预览和小程序原型均没有后台推送或医疗建议。'); }
     else if (action === 'event') { if (control.dataset.key.includes(':manual-')) return alert('这是一条补记记录。'); ui.sheetKey = control.dataset.key; }
     else if (action === 'close-sheet') ui.sheetKey = '';

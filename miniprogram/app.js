@@ -3,7 +3,7 @@ App({
   onLaunch() {
     let saved;
     try { saved = wx.getStorageSync('medtimer-wechat-demo-v1'); } catch (_) { saved = null; }
-    this.globalData.state = model.valid(saved) ? saved : model.seed();
+    this.globalData.state = model.valid(saved) ? saved : model.demoSeed();
     model.reconcile(this.globalData.state, new Date());
     this.persist();
   },

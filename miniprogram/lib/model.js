@@ -21,6 +21,24 @@ function seed() {
     ] }
   ], events: {}, audit: [] };
 }
+function demoSeed(now = new Date()) {
+  const state = seed(), today = dayKey(now), days = 30;
+  state.medicines.forEach((medicine, medicineIndex) => {
+    medicine.reminders.forEach((reminder, reminderIndex) => {
+      for (let age = days - 1; age >= 0; age--) {
+        const day = plusDays(today, -age), dueAt = at(day, reminder.time);
+        if (!activeOn(reminder, day) || (age === 0 && dueAt > now.getTime())) continue;
+        const skipped = (age + medicineIndex * 2 + reminderIndex * 3) % 7 === 3;
+        const key = day + ':' + reminder.id, status = skipped ? 'skipped' : 'taken';
+        state.events[key] = { key, day, medicineId: medicine.id, reminderId: reminder.id, name: medicine.name,
+          amount: reminder.amount, unit: medicine.unit, status, dueAt, raisedAt: null,
+          processedAt: Math.min(now.getTime(), dueAt + 15 * 60000), snoozeUntil: null,
+          deducted: status === 'taken' ? reminder.amount : 0, manual: false };
+      }
+    });
+  });
+  return state;
+}
 function activeOn(reminder, day) {
   if (!reminder.active) return false;
   if (reminder.type === 'cycle') {
@@ -124,6 +142,6 @@ function stats(state, endDay, count) {
   return result;
 }
 function week(day) { const offset = dateOf(day).getDay(); const monday = plusDays(day, -((offset + 6) % 7)); return Array.from({ length: 7 }, (_, index) => plusDays(monday, index)); }
-const api = { ALL_DAYS, STATUSES, id, dayKey, dateOf, plusDays, at, valid, validDoseAmount, hasConcentrationParams, concentrationSeries, seed, activeOn, scheduled, findRow, raise, reconcile, snooze, outcome, manualDose, history, stats, week };
+const api = { ALL_DAYS, STATUSES, id, dayKey, dateOf, plusDays, at, valid, validDoseAmount, hasConcentrationParams, concentrationSeries, seed, demoSeed, activeOn, scheduled, findRow, raise, reconcile, snooze, outcome, manualDose, history, stats, week };
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
 else if (typeof window !== 'undefined') window.MedTimerModel = api;

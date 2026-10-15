@@ -33,6 +33,20 @@ test('fixture is a complete, valid dataset with unique medicine and reminder IDs
   }
 });
 
+test('demo dataset fills the 7-day and 30-day analysis views with mixed outcomes', () => {
+  const now = new Date(2026, 9, 15, 17, 2), state = model.demoSeed(now);
+  const history = model.history(state), sevenDays = model.stats(state, model.dayKey(now), 7);
+  const thirtyDays = model.stats(state, model.dayKey(now), 30);
+  assert.equal(model.valid(state), true);
+  assert.ok(history.length > 60);
+  assert.ok(history.some(item => item.status === 'taken'));
+  assert.ok(history.some(item => item.status === 'skipped'));
+  assert.ok(sevenDays.filter(item => item.taken + item.skipped > 0).length >= 6);
+  assert.ok(thirtyDays.every(item => item.taken + item.skipped > 0));
+  assert.equal(thirtyDays.reduce((sum, item) => sum + item.taken + item.skipped, 0), history.length);
+  assert.equal(history.some(item => item.day > model.dayKey(now)), false);
+});
+
 test('dose amounts use half-unit increments only', () => {
   for (const amount of [0.5, 1, 1.5, 2, 2.5]) assert.equal(model.validDoseAmount(amount), true);
   for (const amount of [0, 0.1, 0.25, 1.2, 1.75, -0.5, NaN, Infinity]) assert.equal(model.validDoseAmount(amount), false);
