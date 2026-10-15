@@ -39,6 +39,13 @@ function demoSeed(now = new Date()) {
   });
   return state;
 }
+function fullDemoSeed(now = new Date()) {
+  const state = demoSeed(now);
+  state.demoConcentrationParams = true;
+  state.medicines[0].halfLifeHours = 12; state.medicines[0].peakTimeHours = 2;
+  state.medicines[1].halfLifeHours = 6; state.medicines[1].peakTimeHours = 1;
+  return state;
+}
 function activeOn(reminder, day) {
   if (!reminder.active) return false;
   if (reminder.type === 'cycle') {
@@ -142,6 +149,6 @@ function stats(state, endDay, count) {
   return result;
 }
 function week(day) { const offset = dateOf(day).getDay(); const monday = plusDays(day, -((offset + 6) % 7)); return Array.from({ length: 7 }, (_, index) => plusDays(monday, index)); }
-const api = { ALL_DAYS, STATUSES, id, dayKey, dateOf, plusDays, at, valid, validDoseAmount, hasConcentrationParams, concentrationSeries, seed, demoSeed, activeOn, scheduled, findRow, raise, reconcile, snooze, outcome, manualDose, history, stats, week };
+const api = { ALL_DAYS, STATUSES, id, dayKey, dateOf, plusDays, at, valid, validDoseAmount, hasConcentrationParams, concentrationSeries, seed, demoSeed, fullDemoSeed, activeOn, scheduled, findRow, raise, reconcile, snooze, outcome, manualDose, history, stats, week };
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
 else if (typeof window !== 'undefined') window.MedTimerModel = api;

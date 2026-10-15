@@ -59,6 +59,13 @@ function demoSeed(now = new Date()) {
   });
   return state;
 }
+function fullDemoSeed(now = new Date()) {
+  const state = demoSeed(now);
+  state.demoConcentrationParams = true;
+  state.medicines[0].halfLifeHours = 12; state.medicines[0].peakTimeHours = 2;
+  state.medicines[1].halfLifeHours = 6; state.medicines[1].peakTimeHours = 1;
+  return state;
+}
 function activeOn(reminder, day) {
   if (!reminder.active) return false;
   if (reminder.type === 'cycle') {
@@ -162,7 +169,7 @@ function stats(state, endDay, count) {
   return result;
 }
 function week(day) { const offset = dateOf(day).getDay(); const monday = plusDays(day, -((offset + 6) % 7)); return Array.from({ length: 7 }, (_, index) => plusDays(monday, index)); }
-const api = { ALL_DAYS, STATUSES, id, dayKey, dateOf, plusDays, at, valid, validDoseAmount, hasConcentrationParams, concentrationSeries, seed, demoSeed, activeOn, scheduled, findRow, raise, reconcile, snooze, outcome, manualDose, history, stats, week };
+const api = { ALL_DAYS, STATUSES, id, dayKey, dateOf, plusDays, at, valid, validDoseAmount, hasConcentrationParams, concentrationSeries, seed, demoSeed, fullDemoSeed, activeOn, scheduled, findRow, raise, reconcile, snooze, outcome, manualDose, history, stats, week };
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
 else if (typeof window !== 'undefined') window.MedTimerModel = api;
 
@@ -171,14 +178,17 @@ else if (typeof window !== 'undefined') window.MedTimerModel = api;
 (function () {
   'use strict';
   const M = window.MedTimerModel;
-  const STORE = new URLSearchParams(window.location.search).get('demo') === 'full'
-    ? 'medtimer-wechat-preview-full-demo-v1' : 'medtimer-wechat-preview-v1';
+  const fullDemo = new URLSearchParams(window.location.search).get('demo') === 'full';
+  const STORE = fullDemo ? 'medtimer-wechat-preview-full-demo-v2' : 'medtimer-wechat-preview-v1';
   const STATUS = { scheduled: ['待触发', '▣'], raised: ['待处理', '♧'], snoozed: ['已延后', '◷'], taken: ['已服用', '✓'], skipped: ['已跳过', '×'] };
   const WEEK = ['日', '一', '二', '三', '四', '五', '六'];
   const app = document.getElementById('app');
   let state;
   try { state = JSON.parse(localStorage.getItem(STORE)); } catch (_) { state = null; }
-  if (!M.valid(state)) state = M.demoSeed();
+  function createDemoSeed() {
+    return fullDemo ? M.fullDemoSeed() : M.demoSeed();
+  }
+  if (!M.valid(state)) state = createDemoSeed();
   const ui = { tab: 'overview', screen: 'main', day: M.dayKey(new Date()), filter: 'all', analysis: 'chart', range: 7, editingId: '', reminderId: '', form: null, rule: null, manualId: '', manualAmount: 1, sheetKey: '', menu: false };
   function esc(value) { return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char])); }
   function clone(value) { return JSON.parse(JSON.stringify(value)); }
@@ -225,7 +235,8 @@ else if (typeof window !== 'undefined') window.MedTimerModel = api;
       const labels = Array.from({ length: 5 }, (_, index) => { const day = M.plusDays(M.plusDays(M.dayKey(new Date()), 1 - ui.range), Math.floor((ui.range - 1) * index / 4)); return day.slice(5).replace('-', '/'); });
       const paths = series.map(item => '<polyline fill="none" stroke="' + esc(item.color) + '" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="' + item.points.map(point => (point.x * 1000).toFixed(1) + ',' + (220 - point.value * 1.9).toFixed(1)).join(' ') + '"></polyline>').join('');
       const graph = series.length ? '<div class="concentration-scale">相对峰值水平（每种药物按自身峰值归一）</div><svg class="concentration-svg" viewBox="0 0 1000 270" role="img" aria-label="最近 ' + ui.range + ' 天用药相对浓度趋势"><line x1="0" y1="220" x2="1000" y2="220"/><line x1="0" y1="125" x2="1000" y2="125"/><line x1="0" y1="30" x2="1000" y2="30"/>' + paths + '</svg><div class="concentration-axis">' + labels.map(label => '<span>' + label + '</span>').join('') + '</div><div class="concentration-legend">' + series.map(item => '<span><i style="background:' + esc(item.color) + '"></i>' + esc(item.name) + '（半衰期 ' + item.halfLifeHours + ' 小时，达峰 ' + item.peakTimeHours + ' 小时）</span>').join('') + '</div>' : '<div class="concentration-empty"><strong>还没有可绘制的药品</strong><p>在药品设置中填写半衰期和达峰时间，再记录服用剂量，即可查看估算趋势。</p>' + (state.medicines.length ? '<button data-action="open-med" data-id="' + esc(state.medicines[0].id) + '">去设置药品参数</button>' : '<button data-action="add-med">先添加药品</button>') + '</div>';
-      return options + '<div class="concentration-card">' + graph + '</div><p class="concentration-note">基于已记录的服用剂量和简化模型估算相对趋势；仅供记录参考，不代表真实血药浓度，也不构成医疗建议。</p>';
+      const demoNote = state.demoConcentrationParams ? '<p class="concentration-note">当前测试曲线使用虚构参数（半衰期与达峰时间），只用于展示图表交互，不代表这些药品的真实药代数据。</p>' : '';
+      return options + '<div class="concentration-card">' + graph + '</div>' + demoNote + '<p class="concentration-note">基于已记录的服用剂量和简化模型估算相对趋势；仅供记录参考，不代表真实血药浓度，也不构成医疗建议。</p>';
     }
     if (ui.analysis === 'table') return options + '<div class="table-card"><div class="table-row head"><span>处理时间</span><span>药品</span><span>状态</span></div>' + (history.map(item => '<div class="table-row"><span>' + esc(timeText(item.processedAt)) + '</span><span>' + esc(item.name) + '</span><span>' + STATUS[item.status][0] + '</span></div>').join('') || '<div class="empty">尚无记录</div>') + '</div>';
     const date = M.dateOf(ui.day), first = new Date(date.getFullYear(), date.getMonth(), 1), firstDay = M.dayKey(first), start = M.plusDays(firstDay, -first.getDay());
@@ -313,7 +324,7 @@ else if (typeof window !== 'undefined') window.MedTimerModel = api;
     else if (action === 'month-prev' || action === 'month-next') { const d = M.dateOf(ui.day); d.setMonth(d.getMonth() + (action === 'month-prev' ? -1 : 1), 1); ui.day = M.dayKey(d); }
     else if (action === 'menu') ui.menu = !ui.menu;
     else if (action === 'simulate') return simulate();
-    else if (action === 'reset') { ui.menu = false; if (confirm('恢复为虚构示例？当前预览数据会被重置。')) { state = M.demoSeed(); save(); ui.day = M.dayKey(new Date()); ui.screen = 'main'; ui.tab = 'overview'; } }
+    else if (action === 'reset') { ui.menu = false; if (confirm('恢复为虚构示例？当前预览数据会被重置。')) { state = createDemoSeed(); save(); ui.day = M.dayKey(new Date()); ui.screen = 'main'; ui.tab = 'overview'; } }
     else if (action === 'about') { ui.menu = false; alert('本项目参考开源 Android 应用 MedTimer 的界面与事件流程。数据仅保存在本机；网页预览和小程序原型均没有后台推送或医疗建议。'); }
     else if (action === 'event') { if (control.dataset.key.includes(':manual-')) return alert('这是一条补记记录。'); ui.sheetKey = control.dataset.key; }
     else if (action === 'close-sheet') ui.sheetKey = '';

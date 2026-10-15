@@ -47,6 +47,14 @@ test('demo dataset fills the 7-day and 30-day analysis views with mixed outcomes
   assert.equal(history.some(item => item.day > model.dayKey(now)), false);
 });
 
+test('full visual demo uses explicitly synthetic parameters to populate the trend chart', () => {
+  const now = new Date(2026, 9, 15, 17, 2), state = model.fullDemoSeed(now);
+  const series = model.concentrationSeries(state, model.dayKey(now), 7);
+  assert.equal(state.demoConcentrationParams, true);
+  assert.equal(series.length, 2);
+  assert.ok(series.every(item => item.points.some(point => point.value > 0)));
+});
+
 test('dose amounts use half-unit increments only', () => {
   for (const amount of [0.5, 1, 1.5, 2, 2.5]) assert.equal(model.validDoseAmount(amount), true);
   for (const amount of [0, 0.1, 0.25, 1.2, 1.75, -0.5, NaN, Infinity]) assert.equal(model.validDoseAmount(amount), false);
