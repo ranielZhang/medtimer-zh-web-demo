@@ -33,13 +33,13 @@
       status.textContent = '家庭组 ' + syncCode + ' · 两端实时联动';
       const base = './index.html?familyPreview=';
       document.getElementById('caregiver-phone').src = base + 'caregiver&tab=overview';
-      document.getElementById('grandma-phone').src = base + 'grandma&tab=my';
+      document.getElementById('grandma-phone').src = base + 'grandma&tab=overview';
       document.getElementById('reset-demo').addEventListener('click', () => {
         shared.forEach(key => localStorage.removeItem(key));
         localStorage.setItem(codeKey, '365970');
         status.textContent = '家庭组 365970 · 两端实时联动';
         document.getElementById('caregiver-phone').src = base + 'caregiver&tab=overview&reset=' + Date.now();
-        document.getElementById('grandma-phone').src = base + 'grandma&tab=my&reset=' + Date.now();
+        document.getElementById('grandma-phone').src = base + 'grandma&tab=overview&reset=' + Date.now();
       });
     })();
   </script>
