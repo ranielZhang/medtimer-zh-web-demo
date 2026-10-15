@@ -1,7 +1,9 @@
 (function () {
   'use strict';
   const M = window.MedTimerModel;
-  const fullDemo = new URLSearchParams(window.location.search).get('demo') === 'full';
+  const query = new URLSearchParams(window.location.search);
+  const fullDemo = query.get('demo') === 'full';
+  const showConcentration = fullDemo && query.get('view') === 'concentration';
   const STORE = fullDemo ? 'medtimer-wechat-preview-full-demo-v2' : 'medtimer-wechat-preview-v1';
   const STATUS = { scheduled: ['待触发', '▣'], raised: ['待处理', '♧'], snoozed: ['已延后', '◷'], taken: ['已服用', '✓'], skipped: ['已跳过', '×'] };
   const WEEK = ['日', '一', '二', '三', '四', '五', '六'];
@@ -12,7 +14,7 @@
     return fullDemo ? M.fullDemoSeed() : M.demoSeed();
   }
   if (!M.valid(state)) state = createDemoSeed();
-  const ui = { tab: 'overview', screen: 'main', day: M.dayKey(new Date()), filter: 'all', analysis: 'chart', range: 7, editingId: '', reminderId: '', form: null, rule: null, manualId: '', manualAmount: 1, sheetKey: '', menu: false };
+  const ui = { tab: showConcentration ? 'analysis' : 'overview', screen: 'main', day: M.dayKey(new Date()), filter: 'all', analysis: showConcentration ? 'concentration' : 'chart', range: 7, editingId: '', reminderId: '', form: null, rule: null, manualId: '', manualAmount: 1, sheetKey: '', menu: false };
   function esc(value) { return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char])); }
   function clone(value) { return JSON.parse(JSON.stringify(value)); }
   function save() { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (_) { alert('当前浏览器无法保存本地数据。'); } }
