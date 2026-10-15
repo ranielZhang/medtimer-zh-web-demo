@@ -48,7 +48,7 @@
   function med(id) { return state.medicines.find(item => item.id === id); }
   function reminderText(rule) { return rule.type === 'cycle' ? rule.activeDays + ' 天服用 / ' + rule.pauseDays + ' 天暂停' : (rule.days.length === 7 ? '每天' : '每周 ' + rule.days.map(day => WEEK[day]).join('、')) + (rule.active ? '' : ' · 已停用'); }
   function renderTop() {
-    const heading = ui.screen === 'editor' ? (ui.editingId ? ui.form.name : '添加药品') : ui.screen === 'reminder' ? (ui.reminderId ? '编辑提醒' : '添加提醒') : ui.screen === 'manual' ? '补记服药' : ui.screen === 'family' ? '家庭组' : ui.tab === 'overview' ? '主页 · ' + title(ui.day) : ui.tab === 'medicines' ? '药品' : ui.tab === 'analysis' ? '分析' : '我的';
+    const heading = ui.screen === 'editor' ? (ui.editingId ? ui.form.name : '添加药品') : ui.screen === 'reminder' ? (ui.reminderId ? '编辑提醒' : '添加提醒') : ui.screen === 'manual' ? '补记服药' : ui.screen === 'family' ? '家庭组' : ui.tab === 'overview' && familyPreview === 'caregiver' ? '家庭照护' : ui.tab === 'overview' ? '主页 · ' + title(ui.day) : ui.tab === 'medicines' ? familyPreview === 'caregiver' ? '奶奶用药设置' : '药品' : ui.tab === 'analysis' ? '分析' : '我的';
     return '<header class="topbar">' + (ui.screen !== 'main' ? '<button class="back" data-action="back" aria-label="返回">‹</button>' : '') + '<h1>' + esc(heading) + '</h1><button class="capsule" aria-label="微信小程序菜单">···　◯</button><button class="more" data-action="menu" aria-label="更多">⋮</button></header>';
   }
   function displayRows(day) {
@@ -57,6 +57,7 @@
     return rows.sort((a, b) => a.time.localeCompare(b.time));
   }
   function renderOverview() {
+    if (familyPreview === 'caregiver') return '<section class="caregiver-guide"><div class="caregiver-guide-icon">⌂</div><h2>为奶奶安排用药</h2><p>你在这里添加药品和提醒，设置会同步到奶奶端。</p><div class="caregiver-guide-flow"><span>家人设置用药计划</span><b>→</b><span>奶奶端显示服药提醒</span></div><button class="family-primary" data-action="tab" data-tab="medicines">管理奶奶的药品与提醒</button><small>家人端不显示奶奶的服药提醒；奶奶在自己的主页查看并记录。</small></section>';
     const week = M.week(ui.day).map(day => '<button class="week-day ' + (day === ui.day ? 'selected' : '') + '" data-action="day" data-day="' + day + '"><small>' + WEEK[M.dateOf(day).getDay()] + '</small><strong>' + +day.slice(8) + '</strong></button>').join('');
     const filters = [['all', '全部'], ['scheduled', '待触发'], ['raised', '待处理'], ['taken', '已服用'], ['skipped', '已跳过']].map(item => '<button class="' + (ui.filter === item[0] ? 'active' : '') + '" data-action="filter" data-filter="' + item[0] + '">' + item[1] + '</button>').join('');
     const rows = displayRows(ui.day).filter(row => ui.filter === 'all' || row.status === ui.filter || (ui.filter === 'raised' && row.status === 'snoozed'));
@@ -129,8 +130,8 @@
   }
   function render() {
     const body = ui.screen === 'main' ? (ui.tab === 'overview' ? renderOverview() : ui.tab === 'medicines' ? renderMedicines() : ui.tab === 'analysis' ? renderAnalysis() : renderMine()) : ui.screen === 'editor' ? renderEditor() : ui.screen === 'reminder' ? renderReminder() : ui.screen === 'family' ? renderFamily() : renderManual();
-    const tabbar = ui.screen === 'main' ? '<nav class="tabbar" aria-label="主导航">' + [['overview', '▣', '主页'], ['medicines', '◕', '药品'], ['analysis', '▥', '分析'], ['my', '♙', '我的']].map(item => '<button class="' + (ui.tab === item[0] ? 'current' : '') + '" data-action="tab" data-tab="' + item[0] + '"><b>' + item[1] + '</b><span>' + item[2] + '</span></button>').join('') + '</nav>' : '';
-    const fab = ui.screen === 'main' && ['overview', 'medicines'].includes(ui.tab) ? '<button class="fab" data-action="' + (ui.tab === 'overview' ? 'manual' : 'add-med') + '">' + (ui.tab === 'overview' ? '▰　补记服药' : '⊕　添加药品') + '</button>' : '';
+    const tabbar = ui.screen === 'main' ? '<nav class="tabbar" aria-label="主导航">' + [['overview', '▣', familyPreview === 'caregiver' ? '照护' : '主页'], ['medicines', '◕', familyPreview === 'caregiver' ? '奶奶用药' : '药品'], ['analysis', '▥', '分析'], ['my', '♙', '我的']].map(item => '<button class="' + (ui.tab === item[0] ? 'current' : '') + '" data-action="tab" data-tab="' + item[0] + '"><b>' + item[1] + '</b><span>' + item[2] + '</span></button>').join('') + '</nav>' : '';
+    const fab = ui.screen === 'main' && ['overview', 'medicines'].includes(ui.tab) ? '<button class="fab" data-action="' + (ui.tab === 'overview' && familyPreview !== 'caregiver' ? 'manual' : ui.tab === 'overview' ? 'tab' : 'add-med') + '"' + (ui.tab === 'overview' && familyPreview === 'caregiver' ? ' data-tab="medicines"' : '') + '>' + (ui.tab === 'overview' ? familyPreview === 'caregiver' ? '⊕　添加奶奶的用药提醒' : '▰　补记服药' : '⊕　添加药品') + '</button>' : '';
     app.innerHTML = renderTop() + '<main class="scroll">' + body + '</main>' + tabbar + fab + (ui.menu ? '<div class="menu-pop"><button data-action="family">⌂　家庭组</button><button data-action="simulate">模拟触发下一条提醒</button><button data-action="reset">重置虚构数据</button><button data-action="about">关于与限制</button></div>' : '') + renderSheet();
   }
   function applyFamilyPreviewState(nextState) {
