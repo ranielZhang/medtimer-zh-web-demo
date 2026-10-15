@@ -43,8 +43,12 @@
     const taken = period.filter(item => item.status === 'taken').length, skipped = period.filter(item => item.status === 'skipped').length;
     if (ui.analysis === 'chart') {
       const all = M.stats(state, M.dayKey(new Date()), ui.range); const max = Math.max(1, ...all.map(item => item.taken + item.skipped));
-      const bars = (ui.range === 7 ? all : all.filter((_, i) => i % 3 === 0)).map(item => '<div class="bar-col"><span class="bar-stack"><span class="bar-skipped" style="height:' + item.skipped / max * 100 + '%"></span><span class="bar-taken" style="height:' + item.taken / max * 100 + '%"></span></span><small>' + esc(item.label) + '</small></div>').join('');
-      return options + '<div class="chart-card"><div class="chart-bars">' + bars + '</div><div class="legend"><span>● 已服用</span><span>● 已跳过</span></div></div><div class="summaries"><div class="summary"><strong>最近 ' + ui.range + ' 天</strong><b>' + (taken + skipped ? Math.round(taken * 100 / (taken + skipped)) : 0) + '%</b><span>已服用 ' + taken + ' · 已跳过 ' + skipped + '</span></div><div class="summary"><strong>总记录</strong><b>' + history.length + '</b><span>每条来自用药事件</span></div></div>';
+      const bars = all.map((item, index) => {
+        const label = ui.range === 7 || index % 5 === 0 || index === all.length - 1 ? item.label : '';
+        const description = item.day + '：已服用 ' + item.taken + '，已跳过 ' + item.skipped;
+        return '<div class="bar-col" title="' + esc(description) + '" aria-label="' + esc(description) + '"><span class="bar-stack"><span class="bar-skipped" style="height:' + item.skipped / max * 100 + '%"></span><span class="bar-taken" style="height:' + item.taken / max * 100 + '%"></span></span><small>' + esc(label) + '</small></div>';
+      }).join('');
+      return options + '<div class="chart-card"><div class="chart-bars ' + (ui.range === 30 ? 'range-30' : '') + '">' + bars + '</div><div class="legend"><span>● 已服用</span><span>● 已跳过</span></div></div><div class="summaries"><div class="summary"><strong>最近 ' + ui.range + ' 天</strong><b>' + (taken + skipped ? Math.round(taken * 100 / (taken + skipped)) : 0) + '%</b><span>已服用 ' + taken + ' · 已跳过 ' + skipped + '</span></div><div class="summary"><strong>总记录</strong><b>' + history.length + '</b><span>每条来自用药事件</span></div></div>';
     }
     if (ui.analysis === 'concentration') {
       const series = M.concentrationSeries(state, M.dayKey(new Date()), ui.range);

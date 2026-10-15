@@ -50,7 +50,8 @@ Page({
     const skippedCount = rangeItems.filter(item => item.status === 'skipped').length;
     const bars = model.stats(state, model.dayKey(new Date()), rangeDays);
     const max = Math.max(1, ...bars.map(item => item.taken + item.skipped));
-    const chartBars = (rangeDays === 7 ? bars : bars.filter((_, index) => index % 3 === 0)).map(item => ({ ...item,
+    const chartBars = bars.map((item, index) => ({ ...item,
+      chartLabel: rangeDays === 7 || index % 5 === 0 || index === bars.length - 1 ? item.label : '',
       takenHeight: Math.round(item.taken / max * 100), skippedHeight: Math.round(item.skipped / max * 100) }));
     const concentrationSeries = model.concentrationSeries(state, model.dayKey(new Date()), rangeDays);
     const rangeStart = model.plusDays(model.dayKey(new Date()), 1 - rangeDays);
