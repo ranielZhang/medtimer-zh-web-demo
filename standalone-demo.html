@@ -154,7 +154,7 @@ else if (typeof window !== 'undefined') window.MedTimerModel = api;
     return state.medicines.map(medicine => '<button class="medicine-card" data-action="open-med" data-id="' + esc(medicine.id) + '"><span class="medicine-top"><span class="swatch" style="background:' + esc(medicine.color) + '">' + esc(medicine.icon) + '</span><span class="medicine-text"><strong>' + esc(medicine.name) + '</strong><small>库存 ' + esc(medicine.stock + ' ' + medicine.unit) + (medicine.stock <= medicine.threshold ? '　⚠' : '') + '</small><small>' + medicine.reminders.length + ' 条提醒 · ' + esc(medicine.reminders.filter(rule => rule.active).map(rule => rule.time).join('、') || '已停用') + '</small></span><span class="drag">⠿</span></span><span class="tags">' + medicine.tags.map(tag => '<span>' + esc(tag) + '</span>').join('') + '</span></button>').join('') || '<div class="empty">还没有药品，点下方添加</div>';
   }
   function renderAnalysis() {
-    const options = '<div class="analysis-switch"><button class="' + (ui.analysis === 'chart' ? 'active' : '') + '" data-action="analysis" data-mode="chart" aria-label="图表">▥</button><button class="' + (ui.analysis === 'table' ? 'active' : '') + '" data-action="analysis" data-mode="table" aria-label="表格">▦</button><button class="' + (ui.analysis === 'calendar' ? 'active' : '') + '" data-action="analysis" data-mode="calendar" aria-label="日历">▣</button><select data-field="range" aria-label="分析时间范围"><option value="7"' + (ui.range === 7 ? ' selected' : '') + '>7 天</option><option value="30"' + (ui.range === 30 ? ' selected' : '') + '>30 天</option></select></div>';
+    const options = '<div class="analysis-switch"><button class="' + (ui.analysis === 'chart' ? 'active' : '') + '" data-action="analysis" data-mode="chart" aria-label="图表">▥</button><button class="' + (ui.analysis === 'table' ? 'active' : '') + '" data-action="analysis" data-mode="table" aria-label="表格">▦</button><button class="' + (ui.analysis === 'calendar' ? 'active' : '') + '" data-action="analysis" data-mode="calendar" aria-label="日历">▣</button>' + (ui.analysis === 'chart' ? '<select data-field="range" aria-label="分析时间范围"><option value="7"' + (ui.range === 7 ? ' selected' : '') + '>7 天</option><option value="30"' + (ui.range === 30 ? ' selected' : '') + '>30 天</option></select>' : '') + '</div>';
     const history = M.history(state), since = M.plusDays(M.dayKey(new Date()), 1 - ui.range);
     const period = history.filter(item => item.day >= since);
     const taken = period.filter(item => item.status === 'taken').length, skipped = period.filter(item => item.status === 'skipped').length;
@@ -271,7 +271,6 @@ else if (typeof window !== 'undefined') window.MedTimerModel = api;
     if (ui.screen === 'editor') { if (field === 'tags') ui.form.tags = value.split(/[,，]/).map(item => item.trim()).filter(Boolean); else ui.form[field] = value; }
     else if (ui.screen === 'reminder') ui.rule[field] = value;
     else if (ui.screen === 'manual') ui[field] = value;
-    else if (field === 'range') { ui.range = Number(value); render(); }
   });
   app.addEventListener('change', event => { if (event.target.dataset.field === 'range') { ui.range = Number(event.target.value); render(); } else if (ui.screen === 'reminder' && event.target.dataset.field === 'type') { ui.rule.type = event.target.value; render(); } });
   M.reconcile(state, new Date()); save(); render();

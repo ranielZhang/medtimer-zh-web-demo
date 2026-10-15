@@ -192,7 +192,7 @@ Page({
     app.persist(); this.setData({ screen: 'main', tab: 'overview' }); this.refresh(); toast('已补记服药');
   },
   switchAnalysis(event) { this.setData({ analysisMode: event.currentTarget.dataset.mode }); this.refresh(); },
-  changeRange(event) { this.setData({ rangeIndex: Number(event.detail.value) }); this.refresh(); },
+  changeRange(event) { const rangeIndex = Number(event.detail.value); this.setData({ rangeIndex }, () => this.refresh()); },
   previousMonth() { const date = model.dateOf(this.data.selectedDay); date.setMonth(date.getMonth() - 1, 1); this.setData({ selectedDay: model.dayKey(date) }); this.refresh(); },
   nextMonth() { const date = model.dateOf(this.data.selectedDay); date.setMonth(date.getMonth() + 1, 1); this.setData({ selectedDay: model.dayKey(date) }); this.refresh(); },
   selectCalendarDay(event) { this.setData({ selectedDay: event.currentTarget.dataset.day }); this.refresh(); }
