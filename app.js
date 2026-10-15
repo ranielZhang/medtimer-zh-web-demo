@@ -6,6 +6,7 @@
   const showConcentration = fullDemo && query.get('view') === 'concentration';
   const showAnalysis = fullDemo && (showConcentration || query.get('view') === 'chart');
   const STORE = fullDemo ? 'medtimer-wechat-preview-full-demo-v2' : 'medtimer-wechat-preview-v1';
+  const FAMILY_STORE = 'medtimer-family-group-demo-v1';
   const STATUS = { scheduled: ['待触发', '▣'], raised: ['待处理', '♧'], snoozed: ['已延后', '◷'], taken: ['已服用', '✓'], skipped: ['已跳过', '×'] };
   const WEEK = ['日', '一', '二', '三', '四', '五', '六'];
   const app = document.getElementById('app');
@@ -15,7 +16,9 @@
     return fullDemo ? M.fullDemoSeed() : M.demoSeed();
   }
   if (!M.valid(state)) state = createDemoSeed();
-  const ui = { tab: showAnalysis ? 'analysis' : 'overview', screen: 'main', day: M.dayKey(new Date()), filter: 'all', analysis: showConcentration ? 'concentration' : 'chart', range: fullDemo && query.get('range') === '30' ? 30 : 7, editingId: '', reminderId: '', form: null, rule: null, manualId: '', manualAmount: 1, sheetKey: '', menu: false };
+  let familyGroup;
+  try { familyGroup = JSON.parse(localStorage.getItem(FAMILY_STORE)); } catch (_) { familyGroup = null; }
+  const ui = { tab: showAnalysis ? 'analysis' : 'overview', screen: 'main', day: M.dayKey(new Date()), filter: 'all', analysis: showConcentration ? 'concentration' : 'chart', range: fullDemo && query.get('range') === '30' ? 30 : 7, editingId: '', reminderId: '', form: null, rule: null, manualId: '', manualAmount: 1, familyInput: '', sheetKey: '', menu: false };
   function esc(value) { return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char])); }
   function clone(value) { return JSON.parse(JSON.stringify(value)); }
   function save() { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (_) { alert('当前浏览器无法保存本地数据。'); } }
@@ -24,7 +27,7 @@
   function med(id) { return state.medicines.find(item => item.id === id); }
   function reminderText(rule) { return rule.type === 'cycle' ? rule.activeDays + ' 天服用 / ' + rule.pauseDays + ' 天暂停' : (rule.days.length === 7 ? '每天' : '每周 ' + rule.days.map(day => WEEK[day]).join('、')) + (rule.active ? '' : ' · 已停用'); }
   function renderTop() {
-    const heading = ui.screen === 'editor' ? (ui.editingId ? ui.form.name : '添加药品') : ui.screen === 'reminder' ? (ui.reminderId ? '编辑提醒' : '添加提醒') : ui.screen === 'manual' ? '补记服药' : ui.tab === 'overview' ? '主页 · ' + title(ui.day) : ui.tab === 'medicines' ? '药品' : '分析';
+    const heading = ui.screen === 'editor' ? (ui.editingId ? ui.form.name : '添加药品') : ui.screen === 'reminder' ? (ui.reminderId ? '编辑提醒' : '添加提醒') : ui.screen === 'manual' ? '补记服药' : ui.screen === 'family' ? '家庭组' : ui.tab === 'overview' ? '主页 · ' + title(ui.day) : ui.tab === 'medicines' ? '药品' : '分析';
     return '<header class="topbar">' + (ui.screen !== 'main' ? '<button class="back" data-action="back" aria-label="返回">‹</button>' : '') + '<h1>' + esc(heading) + '</h1><button class="capsule" aria-label="微信小程序菜单">···　◯</button><button class="more" data-action="menu" aria-label="更多">⋮</button></header>';
   }
   function displayRows(day) {
@@ -83,6 +86,12 @@
     return '<div class="editor-card"><label class="field">提醒类型<select data-field="type"><option value="weekly"' + (r.type === 'weekly' ? ' selected' : '') + '>每周固定时间</option><option value="cycle"' + (r.type === 'cycle' ? ' selected' : '') + '>周期疗程</option></select></label><label class="field">提醒时间<input type="time" data-field="time" value="' + esc(r.time) + '"></label><label class="field">单次用量（' + esc(ui.form.unit) + '）<input type="number" min="0.5" step="0.5" data-field="amount" value="' + esc(r.amount) + '"></label>' + (r.type === 'weekly' ? '<div class="field">每周提醒日</div><div class="weekday-choices">' + weekdays + '</div>' : '<label class="field">周期起始日<input type="date" data-field="cycleStart" value="' + esc(r.cycleStart) + '"></label><div class="field-row"><label class="field">连续服用天数<input type="number" min="1" data-field="activeDays" value="' + esc(r.activeDays) + '"></label><label class="field">暂停天数<input type="number" min="1" data-field="pauseDays" value="' + esc(r.pauseDays) + '"></label></div>') + '<label class="check-row"><input type="checkbox" data-field="active"' + (r.active ? ' checked' : '') + '>启用提醒</label></div><p class="notice">单次用量按 0.5 为单位设置。演示只在小程序打开期间计算到点状态。</p><div class="editor-actions"><button data-action="save-rule">保存提醒</button>' + (ui.reminderId ? '<button class="danger" data-action="delete-rule">删除提醒</button>' : '') + '</div>';
   }
   function renderManual() { return '<div class="editor-card"><label class="field">药品<select data-field="manualId">' + state.medicines.map(m => '<option value="' + esc(m.id) + '"' + (ui.manualId === m.id ? ' selected' : '') + '>' + esc(m.name) + '</option>').join('') + '</select></label><label class="field">实际服用数量<input type="number" min="0.5" step="0.5" data-field="manualAmount" value="' + esc(ui.manualAmount) + '"></label><p class="notice">数量按 0.5 为单位填写；补记会创建独立的已服用事件，并扣减相应库存。</p></div><div class="editor-actions"><button data-action="save-manual">记录这次服药</button></div>'; }
+  function renderFamily() {
+    const demoNote = '<p class="notice">当前是本地演示：家庭组与邀请码只保存在本机，无法跨设备核验或同步药品数据。真实使用需要接入云端账号、成员权限和数据同步。</p>';
+    if (!familyGroup) return '<section class="family-intro"><div class="family-icon">⌂</div><h2>家人一起，把用药安排好</h2><p>家人可以先创建家庭组，再把邀请码告诉长辈；长辈输入邀请码即可加入。</p></section><div class="family-card"><h3>创建家庭组</h3><p>由负责设置的家人发起，创建后获得 6 位随机邀请码。</p><button class="family-primary" data-action="create-family">创建家庭组并生成邀请码</button></div><div class="family-card"><h3>加入家庭组</h3><label class="field">输入家人分享的 6 位邀请码<input data-field="familyInput" inputmode="numeric" maxlength="6" placeholder="例如 582731" value="' + esc(ui.familyInput) + '"></label><button class="family-secondary" data-action="join-family">加入家庭组</button></div>' + demoNote;
+    const members = (familyGroup.members || []).map(member => '<div class="family-member"><span class="family-avatar">' + (member.role === '管理员' ? '家' : '我') + '</span><span><strong>' + esc(member.name) + '</strong><small>' + esc(member.relation) + ' · ' + esc(member.role) + '</small></span>' + (member.role === '管理员' ? '<em>组长</em>' : '') + '</div>').join('');
+    return '<div class="family-card family-code-card"><span class="family-eyebrow">家庭组邀请码</span><strong class="family-code">' + esc(familyGroup.code) + '</strong><p>把这串 6 位码告诉家人，对方即可在家庭组页面输入加入。</p><button class="family-primary" data-action="copy-family-code">复制邀请码</button></div><div class="family-card"><h3>家庭成员</h3>' + members + '</div><p class="notice">' + (familyGroup.role === 'owner' ? '你是家庭组管理员。真实版本接入云端同步并获得授权后，才可协助长辈设置用药计划。' : '你已加入家庭组演示。真实版本需在获得授权后才能查看或协助设置用药计划。') + '</p><button class="family-leave" data-action="leave-family">退出家庭组</button>' + demoNote;
+  }
   function renderSheet() {
     if (!ui.sheetKey) return '';
     const row = M.findRow(state, ui.sheetKey), event = state.events[ui.sheetKey];
@@ -92,10 +101,10 @@
     return '<div class="overlay" data-action="close-sheet"><div class="sheet" role="dialog" aria-label="处理提醒"><h2>' + esc(row ? row.medicine.name : event.name) + ' · ' + esc(row ? row.reminder.time : event.time) + '</h2>' + actions.map(item => '<button data-action="event-op" data-op="' + item[0] + '">' + item[1] + '</button>').join('') + '<button data-action="close-sheet">取消</button></div></div>';
   }
   function render() {
-    const body = ui.screen === 'main' ? (ui.tab === 'overview' ? renderOverview() : ui.tab === 'medicines' ? renderMedicines() : renderAnalysis()) : ui.screen === 'editor' ? renderEditor() : ui.screen === 'reminder' ? renderReminder() : renderManual();
+    const body = ui.screen === 'main' ? (ui.tab === 'overview' ? renderOverview() : ui.tab === 'medicines' ? renderMedicines() : renderAnalysis()) : ui.screen === 'editor' ? renderEditor() : ui.screen === 'reminder' ? renderReminder() : ui.screen === 'family' ? renderFamily() : renderManual();
     const tabbar = ui.screen === 'main' ? '<nav class="tabbar" aria-label="主导航">' + [['overview', '▣', '主页'], ['medicines', '◕', '药品'], ['analysis', '▥', '分析']].map(item => '<button class="' + (ui.tab === item[0] ? 'current' : '') + '" data-action="tab" data-tab="' + item[0] + '"><b>' + item[1] + '</b><span>' + item[2] + '</span></button>').join('') + '</nav>' : '';
     const fab = ui.screen === 'main' && ui.tab !== 'analysis' ? '<button class="fab" data-action="' + (ui.tab === 'overview' ? 'manual' : 'add-med') + '">' + (ui.tab === 'overview' ? '▰　补记服药' : '⊕　添加药品') + '</button>' : '';
-    app.innerHTML = renderTop() + '<main class="scroll">' + body + '</main>' + tabbar + fab + (ui.menu ? '<div class="menu-pop"><button data-action="simulate">模拟触发下一条提醒</button><button data-action="reset">重置虚构数据</button><button data-action="about">关于与限制</button></div>' : '') + renderSheet();
+    app.innerHTML = renderTop() + '<main class="scroll">' + body + '</main>' + tabbar + fab + (ui.menu ? '<div class="menu-pop"><button data-action="family">⌂　家庭组</button><button data-action="simulate">模拟触发下一条提醒</button><button data-action="reset">重置虚构数据</button><button data-action="about">关于与限制</button></div>' : '') + renderSheet();
   }
   function openMedicine(id) {
     const medicine = med(id);
@@ -150,6 +159,11 @@
     else if (action === 'analysis') ui.analysis = control.dataset.mode;
     else if (action === 'month-prev' || action === 'month-next') { const d = M.dateOf(ui.day); d.setMonth(d.getMonth() + (action === 'month-prev' ? -1 : 1), 1); ui.day = M.dayKey(d); }
     else if (action === 'menu') ui.menu = !ui.menu;
+    else if (action === 'family') { ui.menu = false; ui.screen = 'family'; ui.familyInput = ''; }
+    else if (action === 'create-family') { familyGroup = M.createFamilyGroup(); localStorage.setItem(FAMILY_STORE, JSON.stringify(familyGroup)); ui.screen = 'family'; }
+    else if (action === 'join-family') { const group = M.joinFamilyGroup(ui.familyInput); if (!group) return alert('请输入 6 位数字邀请码。'); familyGroup = group; localStorage.setItem(FAMILY_STORE, JSON.stringify(familyGroup)); ui.screen = 'family'; alert('已加入家庭组（本地演示）。'); }
+    else if (action === 'copy-family-code') { if (navigator.clipboard && familyGroup) navigator.clipboard.writeText(familyGroup.code).then(() => alert('邀请码已复制。')).catch(() => alert('邀请码：' + familyGroup.code)); else if (familyGroup) alert('邀请码：' + familyGroup.code); }
+    else if (action === 'leave-family') { if (confirm('确定退出这个家庭组？')) { familyGroup = null; localStorage.removeItem(FAMILY_STORE); ui.familyInput = ''; } }
     else if (action === 'simulate') return simulate();
     else if (action === 'reset') { ui.menu = false; if (confirm('恢复为虚构示例？当前预览数据会被重置。')) { state = createDemoSeed(); save(); ui.day = M.dayKey(new Date()); ui.screen = 'main'; ui.tab = 'overview'; } }
     else if (action === 'about') { ui.menu = false; alert('本项目参考开源 Android 应用 MedTimer 的界面与事件流程。数据仅保存在本机；网页预览和小程序原型均没有后台推送或医疗建议。'); }
@@ -176,6 +190,7 @@
     if (ui.screen === 'editor') { if (field === 'tags') ui.form.tags = value.split(/[,，]/).map(item => item.trim()).filter(Boolean); else ui.form[field] = value; }
     else if (ui.screen === 'reminder') ui.rule[field] = value;
     else if (ui.screen === 'manual') ui[field] = value;
+    else if (ui.screen === 'family') ui[field] = value.replace(/\D/g, '').slice(0, 6);
   });
   app.addEventListener('change', event => { if (event.target.dataset.field === 'range') { ui.range = Number(event.target.value); render(); } else if (ui.screen === 'reminder' && event.target.dataset.field === 'type') { ui.rule.type = event.target.value; render(); } });
   M.reconcile(state, new Date()); save(); render();

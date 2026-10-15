@@ -50,3 +50,15 @@ test('manual dose creates a separate taken event and appears in analysis', () =>
   assert.equal(model.history(state).length, 1);
   assert.equal(model.stats(state, '2026-10-15', 7).at(-1).taken, 1);
 });
+
+test('family group creates six-digit invites and accepts valid join codes', () => {
+  const group = model.createFamilyGroup('家人', 1234);
+  assert.match(group.code, /^\d{6}$/);
+  assert.equal(group.role, 'owner');
+  assert.equal(group.members[0].role, '管理员');
+  const joined = model.joinFamilyGroup(group.code, '长辈', 5678);
+  assert.equal(joined.code, group.code);
+  assert.equal(joined.role, 'member');
+  assert.equal(joined.members[0].name, '长辈');
+  assert.equal(model.joinFamilyGroup('12A', '长辈'), null);
+});

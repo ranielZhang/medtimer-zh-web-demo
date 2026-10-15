@@ -149,6 +149,16 @@ function stats(state, endDay, count) {
   return result;
 }
 function week(day) { const offset = dateOf(day).getDay(); const monday = plusDays(day, -((offset + 6) % 7)); return Array.from({ length: 7 }, (_, index) => plusDays(monday, index)); }
-const api = { ALL_DAYS, STATUSES, id, dayKey, dateOf, plusDays, at, valid, validDoseAmount, hasConcentrationParams, concentrationSeries, seed, demoSeed, fullDemoSeed, activeOn, scheduled, findRow, raise, reconcile, snooze, outcome, manualDose, history, stats, week };
+function createFamilyGroup(userName = '我', now = Date.now()) {
+  return { code: String(Math.floor(100000 + Math.random() * 900000)), role: 'owner', createdAt: now,
+    members: [{ id: 'self', name: userName, relation: '本人', role: '管理员', joinedAt: now }] };
+}
+function joinFamilyGroup(code, userName = '我', now = Date.now()) {
+  const inviteCode = String(code || '').trim();
+  if (!/^\d{6}$/.test(inviteCode)) return null;
+  return { code: inviteCode, role: 'member', createdAt: now,
+    members: [{ id: 'self', name: userName, relation: '本人', role: '成员', joinedAt: now }] };
+}
+const api = { ALL_DAYS, STATUSES, id, dayKey, dateOf, plusDays, at, valid, validDoseAmount, hasConcentrationParams, concentrationSeries, seed, demoSeed, fullDemoSeed, activeOn, scheduled, findRow, raise, reconcile, snooze, outcome, manualDose, history, stats, week, createFamilyGroup, joinFamilyGroup };
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
 else if (typeof window !== 'undefined') window.MedTimerModel = api;

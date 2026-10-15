@@ -15,12 +15,15 @@ Page({
     chartBars: [], takenCount: 0, skippedCount: 0, takenRate: 0, totalEvents: 0, rangeDays: 7, concentrationSeries: [], concentrationLabels: [],
     historyRows: [], weekdayLabels: ['日', '一', '二', '三', '四', '五', '六'], calendarTitle: '', calendarCells: [], calendarEventRows: [],
     medicineNames: [], manualMedicineIndex: 0, manualAmount: '1', editingId: '', editingReminderId: '',
+    familyGroup: null, familyCodeInput: '',
     formMedicine: {}, editorReminders: [], reminderTypes: ['每周固定时间', '周期疗程'], reminderTypeIndex: 0,
     formReminder: {}, reminderWeekdays: []
   },
   onLoad() {
     const info = wx.getSystemInfoSync();
-    this.setData({ statusBarHeight: info.statusBarHeight || 24, selectedDay: model.dayKey(new Date()) });
+    let familyGroup = null;
+    try { familyGroup = wx.getStorageSync('medtimer-family-group-demo-v1') || null; } catch (_) {}
+    this.setData({ statusBarHeight: info.statusBarHeight || 24, selectedDay: model.dayKey(new Date()), familyGroup });
   },
   onShow() { this.refresh(); this.timer = setInterval(() => { if (model.reconcile(app.globalData.state, new Date())) { app.persist(); this.refresh(); } }, 15000); },
   onHide() { if (this.timer) clearInterval(this.timer); },
@@ -124,13 +127,36 @@ Page({
     } });
   },
   openMenu() {
-    const actions = ['模拟触发下一条提醒', '重置虚构演示数据', '关于本演示'];
+    const actions = ['家庭组', '模拟触发下一条提醒', '重置虚构演示数据', '关于本演示'];
     wx.showActionSheet({ itemList: actions, success: result => {
-      if (result.tapIndex === 0) this.simulateNext();
-      if (result.tapIndex === 1) wx.showModal({ title: '重置演示数据？', content: '药品与记录将恢复为虚构示例。', success: response => {
+      if (result.tapIndex === 0) this.setData({ screen: 'family', familyCodeInput: '' });
+      if (result.tapIndex === 1) this.simulateNext();
+      if (result.tapIndex === 2) wx.showModal({ title: '重置演示数据？', content: '药品与记录将恢复为虚构示例。', success: response => {
         if (response.confirm) { app.globalData.state = model.demoSeed(); app.persist(); this.refresh(); }
       } });
-      if (result.tapIndex === 2) wx.showModal({ title: 'MedTimer 小程序演示', content: '界面与核心提醒事件流程参考开源 Android 项目 MedTimer。数据只保存在本机；没有后台推送或医疗建议。', showCancel: false });
+      if (result.tapIndex === 3) wx.showModal({ title: 'MedTimer 小程序演示', content: '界面与核心提醒事件流程参考开源 Android 项目 MedTimer。数据只保存在本机；没有后台推送或医疗建议。', showCancel: false });
+    } });
+  },
+  persistFamilyGroup(group) {
+    try { if (group) wx.setStorageSync('medtimer-family-group-demo-v1', group); else wx.removeStorageSync('medtimer-family-group-demo-v1'); }
+    catch (_) { toast('家庭组信息保存失败'); }
+    this.setData({ familyGroup: group });
+  },
+  createFamilyGroup() { const group = model.createFamilyGroup(); this.persistFamilyGroup(group); toast('家庭组已创建'); },
+  familyCodeInput(event) { this.setData({ familyCodeInput: String(event.detail.value || '').replace(/\D/g, '').slice(0, 6) }); },
+  joinFamilyGroup() {
+    const group = model.joinFamilyGroup(this.data.familyCodeInput);
+    if (!group) { toast('请输入 6 位数字邀请码'); return; }
+    this.persistFamilyGroup(group); toast('已加入家庭组（本地演示）');
+  },
+  copyFamilyCode() {
+    const code = this.data.familyGroup && this.data.familyGroup.code;
+    if (!code) return;
+    wx.setClipboardData({ data: code, success: () => toast('邀请码已复制') });
+  },
+  leaveFamilyGroup() {
+    wx.showModal({ title: '退出家庭组？', content: '退出后，本机将清除这个演示家庭组。', success: result => {
+      if (result.confirm) { this.persistFamilyGroup(null); this.setData({ familyCodeInput: '' }); }
     } });
   },
   simulateNext() {
