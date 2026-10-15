@@ -137,6 +137,8 @@ Page({
       if (result.tapIndex === 3) wx.showModal({ title: 'MedTimer 小程序演示', content: '界面与核心提醒事件流程参考开源 Android 项目 MedTimer。数据只保存在本机；没有后台推送或医疗建议。', showCancel: false });
     } });
   },
+  openFamilyGroup() { this.setData({ screen: 'family', familyCodeInput: '' }); },
+  showAbout() { wx.showModal({ title: 'MedTimer 小程序演示', content: '界面与核心提醒事件流程参考开源 Android 项目 MedTimer。数据只保存在本机；没有后台推送或医疗建议。', showCancel: false }); },
   persistFamilyGroup(group) {
     try { if (group) wx.setStorageSync('medtimer-family-group-demo-v1', group); else wx.removeStorageSync('medtimer-family-group-demo-v1'); }
     catch (_) { toast('家庭组信息保存失败'); }
